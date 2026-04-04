@@ -1,132 +1,140 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 
 const ALL_CARDS = [
-  // Numbers
+  // ——— NUMBERS ———
   { id:1, front:"One (1)", back:"एक", tl:"Ek", pron:"ehk — rhymes with 'check'", cat:"Numbers", hint:"Also means 'a/an' — 'ek aadmi' = 'a man'.", trick:"Klingt wie 'Eck' (Ecke) — eine Ecke hat einen Punkt = eins." },
   { id:2, front:"Two (2)", back:"दो", tl:"Do", pron:"doe — like a female deer", cat:"Numbers", hint:"'Do baar' means 'twice'.", trick:"Klingt wie 'doh' — denk an Do-ppel = zwei." },
   { id:3, front:"Three (3)", back:"तीन", tl:"Teen", pron:"teen — like English 'teen'", cat:"Numbers", hint:"Same sound as the English word — easy!", trick:"Wie 'Tee in' drei Tassen — Teen = drei." },
   { id:4, front:"Four (4)", back:"चार", tl:"Chaar", pron:"chaar — 'ch' + rhymes with 'car'", cat:"Numbers", hint:"'Chaarpai' — a traditional four-legged cot.", trick:"Ein Char (Charakter) hat 4 Buchstaben — Chaar = vier." },
   { id:5, front:"Five (5)", back:"पाँच", tl:"Paanch", pron:"paanch — nasal 'n', like 'punch'", cat:"Numbers", hint:"Related to 'Panchayat' — a council of five.", trick:"Klingt wie 'Punsch' — fünf Zutaten im Punsch!" },
   { id:6, front:"Six (6)", back:"छह", tl:"Chhah", pron:"cheh — aspirated 'ch', short 'e'", cat:"Numbers", hint:"The 'chh' is breathier than 'ch'.", trick:"Klingt fast wie 'Schach' rückwärts — sechs Figuren-Typen im Schach." },
-  { id:7, front:"Seven (7)", back:"सात", tl:"Saat", pron:"saat — rhymes with 'hot' + 's'", cat:"Numbers", hint:"'Saat phere' = the seven Hindu wedding vows.", trick:"Wie 'Saat' (Samen) — sieben Samen säen. Gleiches Wort im Deutschen!" },
+  { id:7, front:"Seven (7)", back:"सात", tl:"Saat", pron:"saat — rhymes with 'hot' + 's'", cat:"Numbers", hint:"'Saat phere' = the seven Hindu wedding vows.", trick:"Wie 'Saat' (Samen) — sieben Samen säen. Gleiches Wort!" },
   { id:8, front:"Eight (8)", back:"आठ", tl:"Aath", pron:"aath — like 'art' but with 'th'", cat:"Numbers", hint:"Soft dental 'th' — tongue touches upper teeth.", trick:"Klingt wie 'Acht' ohne das 'ch' — fast identisch!" },
   { id:9, front:"Nine (9)", back:"नौ", tl:"Nau", pron:"now — exactly like English 'now'", cat:"Numbers", hint:"Easiest to remember — sounds just like 'now'!", trick:"'Nau' klingt wie 'neu' — neun ist fast 'neu'!" },
   { id:10, front:"Ten (10)", back:"दस", tl:"Das", pron:"thus — without the 'th'", cat:"Numbers", hint:"'Dussehra' comes from 'das' (ten).", trick:"'Das' ist auch deutsch! 'Das sind zehn' — Das = zehn." },
 
-  // Family & People
+  // ——— FAMILY & PEOPLE ———
   { id:11, front:"Father", back:"पिता", tl:"Pitaa", pron:"pi-TAA", cat:"Family & People", hint:"Formal. Casual = 'Paapaa' — like father vs dad.", trick:"Klingt wie 'Pita'-Brot — Vater bringt Pita mit nach Hause." },
   { id:12, front:"Sister", back:"बहन", tl:"Behen", pron:"beh-HEN — soft 'h'", cat:"Family & People", hint:"'Didi' for elder sister.", trick:"'Behen' klingt wie 'Bähnen' — meine Schwester bahnt mir den Weg." },
   { id:13, front:"Relative", back:"रिश्तेदार", tl:"Rishtedaar", pron:"rish-tay-DAAR", cat:"Family & People", hint:"Hindi has unique words for every relative.", trick:"'Rishte' klingt wie 'Riste' (Handgelenk) — Verwandte reichen dir die Hand." },
-  { id:14, front:"Neighbour", back:"पड़ोसी", tl:"Padosi", pron:"pa-ROH-see", cat:"Family & People", hint:"Neighbours = almost family in Indian culture.", trick:"'Padosi' — denk an 'Paradiso' nebenan, der Nachbar im Paradies." },
-  { id:15, front:"Guest", back:"मेहमान", tl:"Mehmaan", pron:"meh-MAAN", cat:"Family & People", hint:"'Atithi Devo Bhava' — Guest is God.", trick:"'Mehmaan' — 'Mehr Mann' kommt zu Besuch = mehr Gäste!" },
+  { id:14, front:"Neighbour", back:"पड़ोसी", tl:"Padosi", pron:"pa-ROH-see", cat:"Family & People", hint:"Neighbours = almost family in Indian culture.", trick:"'Padosi' — denk an 'Paradiso' nebenan." },
+  { id:15, front:"Guest", back:"मेहमान", tl:"Mehmaan", pron:"meh-MAAN", cat:"Family & People", hint:"'Atithi Devo Bhava' — Guest is God.", trick:"'Mehmaan' — 'Mehr Mann' kommt zu Besuch!" },
   { id:16, front:"Man", back:"आदमी", tl:"Aadmi", pron:"AAD-mee", cat:"Family & People", hint:"'Aam aadmi' = common man.", trick:"Klingt wie 'Adam' + i — Adam war der erste Mann." },
   { id:17, front:"Anybody", back:"कोई भी", tl:"Koi bhi", pron:"KOY bhee", cat:"Family & People", hint:"'Koi' = someone. 'Bhi' = also/even.", trick:"Klingt wie 'Koi' (Fisch) — jeder beliebige Koi im Teich." },
+  { id:109, front:"Customer", back:"ग्राहक", tl:"Graahak", pron:"GRAA-hak", cat:"Family & People", hint:"'Graahak bhagwaan hai' = The customer is God.", trick:"'Graahak' — klingt wie 'Gra(b)-Hack' — der Kunde hackt nach Angeboten!" },
 
-  // Body Parts
+  // ——— BODY PARTS ———
   { id:18, front:"Hand", back:"हाथ", tl:"Haath", pron:"haath — like 'heart' with 'th'", cat:"Body Parts", hint:"'Haath milana' = shake hands.", trick:"'Haath' klingt wie 'hat' — die Hand hat fünf Finger." },
   { id:19, front:"Head", back:"सिर", tl:"Sir", pron:"sir — like English 'sir'", cat:"Body Parts", hint:"'Sir dard' = headache.", trick:"Wie 'Sir' — ein Sir trägt eine Krone auf dem Kopf!" },
   { id:20, front:"Ear", back:"कान", tl:"Kaan", pron:"kaan — like 'con' with long 'aa'", cat:"Body Parts", hint:"'Kaan pakadna' = to apologize.", trick:"Klingt wie 'Kahn' — ein Ohr hat die Form eines Kahns!" },
-  { id:98, front:"Foot", back:"पैर", tl:"Pair", pron:"pair — like English 'pair'", cat:"Body Parts", hint:"'Pair' = foot/leg. 'Paidal' means 'on foot'.", trick:"Klingt wie 'Paar' — ein Paar Füße hat man immer!" },
+  { id:98, front:"Foot", back:"पैर", tl:"Pair", pron:"pair — like English 'pair'", cat:"Body Parts", hint:"'Paidal' means 'on foot'.", trick:"Klingt wie 'Paar' — ein Paar Füße hat man immer!" },
 
-  // Nature & Weather
-  { id:21, front:"Rain", back:"बारिश", tl:"Baarish", pron:"BAA-rish", cat:"Nature & Weather", hint:"India's monsoon makes 'baarish' beloved.", trick:"'Baarish' — 'Bar' + 'isch': es ist barsch draußen wenn es regnet." },
-  { id:22, front:"Wind", back:"हवा", tl:"Havaa", pron:"ha-VAA", cat:"Nature & Weather", hint:"Also means 'air'.", trick:"'Havaa' — denk an 'Hawaii' wo der Wind immer weht!" },
-  { id:23, front:"River", back:"नदी", tl:"Nadi", pron:"na-DEE", cat:"Nature & Weather", hint:"India's rivers are sacred — Ganga, Yamuna.", trick:"'Nadi' — wie 'Nadel' die durch den Stoff fließt wie ein Fluss." },
-  { id:24, front:"Ocean", back:"समुद्र", tl:"Samudra", pron:"sa-MOOD-ra", cat:"Nature & Weather", hint:"'Samudra Manthan' — famous myth.", trick:"'Sa-mud-ra' — 'So viel Mud' (Schlamm) gibt's nur im Ozean!" },
-  { id:25, front:"Rose", back:"गुलाब", tl:"Gulaab", pron:"goo-LAAB", cat:"Nature & Weather", hint:"'Gulab jamun' = rose-water flavored dessert.", trick:"'Gulaab' — 'Guck mal Lab!' — guck mal, eine Rose im Labor!" },
-  { id:26, front:"Weather", back:"मौसम", tl:"Mausam", pron:"MOW-sam", cat:"Nature & Weather", hint:"India has 6 seasons!", trick:"'Mausam' — wie 'Maus am' Fenster die das Wetter beobachtet." },
-  { id:27, front:"World", back:"दुनिया", tl:"Duniya", pron:"doo-nee-YAA", cat:"Nature & Weather", hint:"'Saari duniya' = the whole world.", trick:"'Duniya' — klingt wie 'Düne, ja!' — Dünen gibt es überall auf der Welt." },
-  { id:99, front:"Apple", back:"सेब", tl:"Seb", pron:"sayb — like 'sabe'", cat:"Nature & Weather", hint:"India is a major apple producer, especially in Kashmir and Himachal Pradesh.", trick:"'Seb' klingt wie 'Sieb' — Äpfel durch ein Sieb pressen für Saft!" },
+  // ——— NATURE & WEATHER ———
+  { id:21, front:"Rain", back:"बारिश", tl:"Baarish", pron:"BAA-rish", cat:"Nature & Weather", hint:"India's monsoon makes 'baarish' beloved.", trick:"'Baarish' — 'Bar' + 'isch': barsch wenn es regnet." },
+  { id:22, front:"Wind", back:"हवा", tl:"Havaa", pron:"ha-VAA", cat:"Nature & Weather", hint:"Also means 'air'.", trick:"'Havaa' — denk an 'Hawaii' wo der Wind weht!" },
+  { id:23, front:"River", back:"नदी", tl:"Nadi", pron:"na-DEE", cat:"Nature & Weather", hint:"India's rivers are sacred — Ganga, Yamuna.", trick:"'Nadi' — wie 'Nadel' die durch Stoff fließt." },
+  { id:24, front:"Ocean", back:"समुद्र", tl:"Samudra", pron:"sa-MOOD-ra", cat:"Nature & Weather", hint:"'Samudra Manthan' — famous myth.", trick:"'Sa-mud-ra' — 'So viel Mud' gibt's nur im Ozean!" },
+  { id:25, front:"Rose", back:"गुलाब", tl:"Gulaab", pron:"goo-LAAB", cat:"Nature & Weather", hint:"'Gulab jamun' = rose-water flavored dessert.", trick:"'Gulaab' — 'Guck mal Lab!' — eine Rose im Labor!" },
+  { id:26, front:"Weather", back:"मौसम", tl:"Mausam", pron:"MOW-sam", cat:"Nature & Weather", hint:"India has 6 seasons!", trick:"'Mausam' — 'Maus am' Fenster beobachtet das Wetter." },
+  { id:27, front:"World", back:"दुनिया", tl:"Duniya", pron:"doo-nee-YAA", cat:"Nature & Weather", hint:"'Saari duniya' = the whole world.", trick:"'Duniya' — 'Düne, ja!' — Dünen überall auf der Welt." },
 
-  // Colors
-  { id:28, front:"Colour", back:"रंग", tl:"Rang", pron:"rung — like 'rung' of a ladder", cat:"Colors", hint:"Holi = festival of colours.", trick:"'Rang' klingt wie 'Rang' im Deutschen — Farben haben einen Rang!" },
-  { id:29, front:"White", back:"सफ़ेद", tl:"Safed", pron:"sa-FEYD", cat:"Colors", hint:"White = peace & mourning in India.", trick:"'Safed' — wie 'safe' (sicher) — weiße Flagge = sicher!" },
-  { id:30, front:"Orange", back:"नारंगी", tl:"Naarangi", pron:"naa-RAN-gee", cat:"Colors", hint:"Same word for fruit and color!", trick:"'Naarangi' — 'Na, Rangi?' — Na, ist die Orange farbig?" },
-  { id:31, front:"Brown", back:"भूरा", tl:"Bhura", pron:"BHOO-raa — aspirated 'bh'", cat:"Colors", hint:"Practice 'bh' by saying 'b' with extra air.", trick:"'Bhura' klingt wie 'Bura' (Burg) — alte Burgen sind braun." },
+  // ——— COLORS ———
+  { id:28, front:"Colour", back:"रंग", tl:"Rang", pron:"rung — like 'rung' of a ladder", cat:"Colors", hint:"Holi = festival of colours.", trick:"'Rang' klingt wie 'Rang' — Farben haben einen Rang!" },
+  { id:29, front:"White", back:"सफ़ेद", tl:"Safed", pron:"sa-FEYD", cat:"Colors", hint:"White = peace & mourning in India.", trick:"'Safed' — wie 'safe' — weiße Flagge = sicher!" },
+  { id:30, front:"Orange", back:"नारंगी", tl:"Naarangi", pron:"naa-RAN-gee", cat:"Colors", hint:"Same word for fruit and color!", trick:"'Naarangi' — 'Na, Rangi?' — ist die Orange farbig?" },
+  { id:31, front:"Brown", back:"भूरा", tl:"Bhura", pron:"BHOO-raa — aspirated 'bh'", cat:"Colors", hint:"Practice 'bh' = 'b' with extra air.", trick:"'Bhura' klingt wie 'Bura' (Burg) — alte Burgen sind braun." },
 
-  // Food & Home
-  { id:32, front:"Sugar", back:"चीनी", tl:"Cheeni", pron:"CHEE-nee", cat:"Food & Home", hint:"Also means 'Chinese'!", trick:"'Cheeni' — wie 'China' — Zucker kam historisch aus China!" },
-  { id:33, front:"Food", back:"खाना", tl:"Khaana", pron:"KHAA-naa — guttural 'kh'", cat:"Food & Home", hint:"'Khaana khaana' = to eat food — same word twice!", trick:"'Khaana' — klingt wie 'Kahn-a' — im Kahn isst man sein Essen." },
-  { id:34, front:"Fruits", back:"फल", tl:"Phal", pron:"full — aspirated 'ph'", cat:"Food & Home", hint:"'Ph' is an aspirated 'p', not 'f'.", trick:"'Phal' — wie 'Fall' — Obst fällt vom Baum!" },
-  { id:35, front:"Knife", back:"चाकू", tl:"Chaaku", pron:"CHAA-koo", cat:"Food & Home", hint:"Indians traditionally eat with hands.", trick:"'Chaaku' — klingt wie 'Schaku' — 'Schau, ein ku-hles Messer!'" },
-  { id:36, front:"Curtain", back:"पर्दा", tl:"Parda", pron:"PAR-daa", cat:"Food & Home", hint:"Also means 'veil' or movie screen.", trick:"'Parda' — wie 'Pard(on)' — Pardon, der Vorhang geht auf!" },
-  { id:37, front:"Wall", back:"दीवार", tl:"Deevaar", pron:"dee-VAAR", cat:"Food & Home", hint:"Iconic Bollywood film 'Deewaar' (1975).", trick:"'Deevaar' — klingt wie 'die Wahr(heit)' steht an der Wand geschrieben." },
-  { id:38, front:"Car", back:"गाड़ी", tl:"Gaadi", pron:"GAA-dee — hard 'd'", cat:"Food & Home", hint:"Used for any vehicle! 'Rail gaadi' = train.", trick:"'Gaadi' — wie 'geh die' Straße entlang mit dem Auto." },
-  { id:100, front:"Vegetable", back:"सब्ज़ी", tl:"Sabzi", pron:"SUB-zee", cat:"Food & Home", hint:"'Sabzi mandi' = vegetable market. A daily essential in Indian cooking.", trick:"'Sabzi' — klingt wie 'Subs-i' — Gemüse als Substitute!" },
-  { id:101, front:"Banana", back:"केला", tl:"Kelaa", pron:"KAY-laa", cat:"Food & Home", hint:"India is the world's largest banana producer!", trick:"'Kelaa' — klingt wie 'Keller' — Bananen reifen im Keller nach!" },
+  // ——— FOOD & HOME ———
+  { id:32, front:"Sugar", back:"चीनी", tl:"Cheeni", pron:"CHEE-nee", cat:"Food & Home", hint:"Also means 'Chinese'!", trick:"'Cheeni' — wie 'China' — Zucker kam aus China!" },
+  { id:33, front:"Food", back:"खाना", tl:"Khaana", pron:"KHAA-naa — guttural 'kh'", cat:"Food & Home", hint:"'Khaana khaana' = to eat food — same word twice!", trick:"'Khaana' — 'Kahn-a' — im Kahn isst man Essen." },
+  { id:34, front:"Fruits", back:"फल", tl:"Phal", pron:"full — aspirated 'ph'", cat:"Food & Home", hint:"'Ph' is aspirated 'p', not 'f'.", trick:"'Phal' — wie 'Fall' — Obst fällt vom Baum!" },
+  { id:35, front:"Knife", back:"चाकू", tl:"Chaaku", pron:"CHAA-koo", cat:"Food & Home", hint:"Indians traditionally eat with hands.", trick:"'Chaaku' — 'Schau, ein ku-hles Messer!'" },
+  { id:36, front:"Curtain", back:"पर्दा", tl:"Parda", pron:"PAR-daa", cat:"Food & Home", hint:"Also means 'veil' or movie screen.", trick:"'Parda' — 'Pard(on)' — der Vorhang geht auf!" },
+  { id:37, front:"Wall", back:"दीवार", tl:"Deevaar", pron:"dee-VAAR", cat:"Food & Home", hint:"Iconic Bollywood film 'Deewaar' (1975).", trick:"'Deevaar' — 'die Wahr(heit)' steht an der Wand." },
+  { id:38, front:"Car", back:"गाड़ी", tl:"Gaadi", pron:"GAA-dee — hard 'd'", cat:"Food & Home", hint:"Used for any vehicle!", trick:"'Gaadi' — 'geh die' Straße entlang mit dem Auto." },
+  { id:99, front:"Apple", back:"सेब", tl:"Seb", pron:"sayb — like 'sabe'", cat:"Food & Home", hint:"India is a major apple producer, especially Kashmir.", trick:"'Seb' klingt wie 'Sieb' — Äpfel durch ein Sieb für Saft!" },
+  { id:100, front:"Vegetable", back:"सब्ज़ी", tl:"Sabzi", pron:"SUB-zee", cat:"Food & Home", hint:"'Sabzi mandi' = vegetable market.", trick:"'Sabzi' — klingt wie 'Subs-i' — Gemüse als Substitute!" },
+  { id:101, front:"Banana", back:"केला", tl:"Kelaa", pron:"KAY-laa", cat:"Food & Home", hint:"India is the world's largest banana producer!", trick:"'Kelaa' — klingt wie 'Keller' — Bananen reifen im Keller!" },
+  { id:112, front:"Egg", back:"अंडा", tl:"Andaa", pron:"UN-daa", cat:"Food & Home", hint:"'Anda bhurji' = Indian scrambled eggs — a beloved street food!", trick:"'Andaa' — klingt wie 'Ander(s)' — ein Ei ist anders als alles andere!" },
+  { id:113, front:"Mirror", back:"शीशा", tl:"Sheeshaa", pron:"SHEE-shaa", cat:"Food & Home", hint:"'Sheeshaa' also means glass. 'Sheesha mahal' = palace of mirrors in Jaipur.", trick:"'Sheeshaa' — klingt wie 'Shisha' — in der Shisha spiegelt sich das Licht!" },
+  { id:115, front:"Breakfast", back:"नाश्ता", tl:"Naashta", pron:"NAASH-taa", cat:"Food & Home", hint:"Indian breakfasts vary by region: poha, idli, paratha, upma!", trick:"'Naashta' — klingt wie 'Nascht-a' — morgens naschen = frühstücken!" },
 
-  // Places
-  { id:39, front:"City", back:"शहर", tl:"Sheher", pron:"sheh-HER", cat:"Places", hint:"From Persian. India has 8 mega cities.", trick:"'Sheher' — klingt wie 'Schere' — eine Stadt ist scharf und lebendig wie eine Schere." },
-  { id:40, front:"Village", back:"गाँव", tl:"Gaanv", pron:"gaanv — nasal", cat:"Places", hint:"~65% of India lives in villages.", trick:"'Gaanv' — klingt wie 'ganz' — ein ganzes Dorf, ganz klein." },
-  { id:41, front:"Inside", back:"अंदर", tl:"Andar", pron:"UN-dar", cat:"Places", hint:"'Andar aao' = Come inside.", trick:"'Andar' — wie 'ander(s)' — drinnen ist es anders als draußen!" },
+  // ——— PLACES ———
+  { id:39, front:"City", back:"शहर", tl:"Sheher", pron:"sheh-HER", cat:"Places", hint:"From Persian. India has 8 mega cities.", trick:"'Sheher' — klingt wie 'Schere' — scharf und lebendig." },
+  { id:40, front:"Village", back:"गाँव", tl:"Gaanv", pron:"gaanv — nasal", cat:"Places", hint:"~65% of India lives in villages.", trick:"'Gaanv' — klingt wie 'ganz' — ein ganzes kleines Dorf." },
+  { id:41, front:"Inside", back:"अंदर", tl:"Andar", pron:"UN-dar", cat:"Places", hint:"'Andar aao' = Come inside.", trick:"'Andar' — wie 'ander(s)' — drinnen ist es anders!" },
   { id:42, front:"Outside", back:"बाहर", tl:"Baahar", pron:"BAA-har", cat:"Places", hint:"Opposite of 'andar'.", trick:"'Baahar' — wie 'Bahre' — die Bahre steht draußen." },
   { id:43, front:"Near", back:"पास", tl:"Paas", pron:"paas — like 'pass'", cat:"Places", hint:"'Mere paas maa hai!' — iconic dialogue.", trick:"'Paas' — wie 'Pass' — der Gebirgspass ist nah!" },
 
-  // Time
+  // ——— TIME ———
   { id:44, front:"Month", back:"महीना", tl:"Maheena", pron:"ma-HEE-naa", cat:"Time", hint:"Hindi has unique month names.", trick:"'Maheena' — wie 'Maschine-a' — die Monats-Maschine dreht sich." },
-  { id:45, front:"December", back:"दिसंबर", tl:"Disambar", pron:"di-SUM-bar", cat:"Time", hint:"Borrowed from English! Dec = winter.", trick:"Klingt fast identisch — 'Disambar' ≈ 'Dezember'. Leicht!" },
-  { id:46, front:"Date", back:"तारीख़", tl:"Taareekh", pron:"taa-REEKH", cat:"Time", hint:"'Aaj ki taareekh' = today's date.", trick:"'Taareekh' — wie 'Tarik' (türkischer Name) — frag Tarik nach dem Datum!" },
+  { id:45, front:"December", back:"दिसंबर", tl:"Disambar", pron:"di-SUM-bar", cat:"Time", hint:"Borrowed from English!", trick:"Klingt fast identisch — 'Disambar' ≈ 'Dezember'. Leicht!" },
+  { id:46, front:"Date", back:"तारीख़", tl:"Taareekh", pron:"taa-REEKH", cat:"Time", hint:"'Aaj ki taareekh' = today's date.", trick:"'Taareekh' — frag Tarik nach dem Datum!" },
   { id:47, front:"Day", back:"दिन", tl:"Din", pron:"din — like English 'din'", cat:"Time", hint:"'Aaj ka din' = today.", trick:"'Din' — wie 'Ding' ohne g — jeder Tag ist ein neues Ding!" },
-  { id:48, front:"Birthday", back:"जन्मदिन", tl:"Janamdin", pron:"ja-NAM-din", cat:"Time", hint:"'Janamdin mubarak!' = Happy Birthday!", trick:"'Janam' (Geburt) + 'din' (Tag) — zusammen wie 'Geburts-tag' im Deutschen!" },
-  { id:49, front:"Often", back:"अक्सर", tl:"Aksar", pron:"UK-sar", cat:"Time", hint:"'Main aksar yahan aata hoon' = I often come here.", trick:"'Aksar' — wie 'Akzent' — ich höre oft einen Akzent." },
-  { id:50, front:"Always", back:"हमेशा", tl:"Hamesha", pron:"ha-MAY-sha", cat:"Time", hint:"Bollywood favorite word.", trick:"'Hamesha' — 'Ha, Me, Sha(tz)!' — Ha, mein Schatz, ich liebe dich immer!" },
-  { id:102, front:"Later", back:"बाद में", tl:"Baad mein", pron:"baad mayn", cat:"Time", hint:"'Baad' = after/later. 'Baad mein milte hain' = See you later.", trick:"'Baad' klingt wie 'Bad' — ich gehe später ins Bad!" },
-  { id:103, front:"Immediately", back:"तुरंत", tl:"Turant", pron:"too-RUNT", cat:"Time", hint:"'Turant aao!' = Come immediately! Shows urgency.", trick:"'Turant' — klingt wie 'Turnen, rannt' — er rannte sofort zum Turnen!" },
+  { id:48, front:"Birthday", back:"जन्मदिन", tl:"Janamdin", pron:"ja-NAM-din", cat:"Time", hint:"'Janamdin mubarak!' = Happy Birthday!", trick:"'Janam' (Geburt) + 'din' (Tag) — wie 'Geburts-tag'!" },
+  { id:49, front:"Often", back:"अक्सर", tl:"Aksar", pron:"UK-sar", cat:"Time", hint:"'Main aksar yahan aata hoon' = I often come here.", trick:"'Aksar' — wie 'Akzent' — oft einen Akzent hören." },
+  { id:50, front:"Always", back:"हमेशा", tl:"Hamesha", pron:"ha-MAY-sha", cat:"Time", hint:"Bollywood favorite word.", trick:"'Hamesha' — 'Ha, Me, Sha(tz)!' — ich liebe dich immer!" },
+  { id:102, front:"Later", back:"बाद में", tl:"Baad mein", pron:"baad mayn", cat:"Time", hint:"'Baad mein milte hain' = See you later.", trick:"'Baad' klingt wie 'Bad' — ich gehe später ins Bad!" },
+  { id:103, front:"Immediately", back:"तुरंत", tl:"Turant", pron:"too-RUNT", cat:"Time", hint:"'Turant aao!' = Come immediately!", trick:"'Turant' — 'Turnen, rannt' — er rannte sofort zum Turnen!" },
 
-  // Emotions
+  // ——— EMOTIONS ———
   { id:51, front:"Happiness", back:"ख़ुशी", tl:"Khushi", pron:"KHOO-shee", cat:"Emotions", hint:"Popular girl's name!", trick:"'Khushi' klingt wie 'kuschel-i' — Kuscheln macht glücklich!" },
-  { id:52, front:"Anger", back:"गुस्सा", tl:"Gussa", pron:"GOOS-saa", cat:"Emotions", hint:"'Gussa mat karo' = Don't get angry.", trick:"'Gussa' — wie 'Guss' (Regenguss) — ein Wutausbruch wie ein Regenguss!" },
+  { id:52, front:"Anger", back:"गुस्सा", tl:"Gussa", pron:"GOOS-saa", cat:"Emotions", hint:"'Gussa mat karo' = Don't get angry.", trick:"'Gussa' — wie 'Guss' — ein Wutausbruch wie ein Regenguss!" },
   { id:53, front:"Dream", back:"सपना", tl:"Sapna", pron:"SUP-naa", cat:"Emotions", hint:"Also a popular girl's name.", trick:"'Sapna' — wie 'Sauna' — in der Sauna träumt man schön." },
-  { id:54, front:"Fun", back:"मज़ा", tl:"Mazaa", pron:"ma-ZAA", cat:"Emotions", hint:"'Mazaa aaya!' = That was fun!", trick:"'Mazaa' — wie 'Matza' (Brot) — Matza backen macht Spaß!" },
+  { id:54, front:"Fun", back:"मज़ा", tl:"Mazaa", pron:"ma-ZAA", cat:"Emotions", hint:"'Mazaa aaya!' = That was fun!", trick:"'Mazaa' — wie 'Matza' — Matza backen macht Spaß!" },
   { id:55, front:"Health", back:"सेहत", tl:"Sehat", pron:"SEH-hat", cat:"Emotions", hint:"'Sehat ka khayal rakhna' = take care of health.", trick:"'Sehat' — 'Seh hat' — wer gut sehen hat, ist gesund!" },
 
-  // Adjectives
-  { id:56, front:"Different", back:"अलग", tl:"Alag", pron:"a-LUG", cat:"Adjectives", hint:"'Alag alag' = various.", trick:"'Alag' — wie 'Alltag' — jeder Alltag ist anders/different." },
-  { id:57, front:"Polite", back:"विनम्र", tl:"Vinamra", pron:"vi-NUM-ra", cat:"Adjectives", hint:"Politeness shown through 'aap' (formal).", trick:"'Vinamra' — klingt wie 'Fein-Ammer' — eine feine, höfliche Ammer." },
-  { id:58, front:"Honest", back:"ईमानदार", tl:"Imaandaar", pron:"ee-MAAN-daar", cat:"Adjectives", hint:"'Imaandaar aadmi' = honest person.", trick:"'Imaan-daar' — 'Iman da(r)' — der Imam ist ehrlich!" },
+  // ——— ADJECTIVES ———
+  { id:56, front:"Different", back:"अलग", tl:"Alag", pron:"a-LUG", cat:"Adjectives", hint:"'Alag alag' = various.", trick:"'Alag' — wie 'Alltag' — jeder Alltag ist anders." },
+  { id:57, front:"Polite", back:"विनम्र", tl:"Vinamra", pron:"vi-NUM-ra", cat:"Adjectives", hint:"Politeness through 'aap' (formal).", trick:"'Vinamra' — 'Fein-Ammer' — eine höfliche Ammer." },
+  { id:58, front:"Honest", back:"ईमानदार", tl:"Imaandaar", pron:"ee-MAAN-daar", cat:"Adjectives", hint:"'Imaandaar aadmi' = honest person.", trick:"'Imaan-daar' — der Imam ist ehrlich!" },
   { id:59, front:"Fast", back:"तेज़", tl:"Tez", pron:"tayz — like 'days' with 't'", cat:"Adjectives", hint:"Also = sharp/bright.", trick:"'Tez' — wie 'Tess' — Tess rennt schnell!" },
   { id:60, front:"Cheap", back:"सस्ता", tl:"Sasta", pron:"SUS-taa", cat:"Adjectives", hint:"Essential for bargaining!", trick:"'Sasta' — wie 'Pasta' — billige Pasta ist sasta!" },
-  { id:61, front:"Clean", back:"साफ़", tl:"Saaf", pron:"saaf — like 'sauf'", cat:"Adjectives", hint:"'Swachh Bharat' = Clean India campaign.", trick:"'Saaf' — wie 'Saft' — sauberer Saft, saaf!" },
+  { id:61, front:"Clean", back:"साफ़", tl:"Saaf", pron:"saaf — like 'sauf'", cat:"Adjectives", hint:"'Swachh Bharat' = Clean India.", trick:"'Saaf' — wie 'Saft' — sauberer Saft!" },
   { id:62, front:"Dry", back:"सूखा", tl:"Sookha", pron:"SOO-khaa", cat:"Adjectives", hint:"Also means 'drought'.", trick:"'Sookha' — wie 'Suche' — ich suche trockenes Land." },
-  { id:63, front:"Wet", back:"गीला", tl:"Geela", pron:"GEE-laa", cat:"Adjectives", hint:"Monsoon essential!", trick:"'Geela' — klingt wie 'Gela(to)' — Gelato wird nass wenn es schmilzt!" },
-  { id:64, front:"Easy", back:"आसान", tl:"Aasaan", pron:"aa-SAAN", cat:"Adjectives", hint:"'Hindi aasaan hai!' = Hindi is easy!", trick:"'Aasaan' — 'Ah, so an(genehm)!' — leicht und angenehm!" },
-  { id:65, front:"Difficult", back:"मुश्किल", tl:"Mushkil", pron:"MUSH-kil", cat:"Adjectives", hint:"Film: 'Ae Dil Hai Mushkil'.", trick:"'Mushkil' — wie 'Muschel' — eine Muschel zu öffnen ist schwierig!" },
-  { id:66, front:"Bad", back:"बुरा", tl:"Buraa", pron:"boo-RAA", cat:"Adjectives", hint:"'Bura mat maano, Holi hai!'", trick:"'Buraa' — wie 'Buhrufe' — Buhrufe sind schlecht!" },
-  { id:67, front:"Interesting", back:"दिलचस्प", tl:"Dilchasp", pron:"dil-CHUSP", cat:"Adjectives", hint:"'Dil' (heart) + 'chasp' (sticking).", trick:"'Dilchasp' — 'Dill-Chasp' — interessanter Dill auf der Klappe!" },
-  { id:68, front:"Enough", back:"काफ़ी / बस", tl:"Kaafi / Bas", pron:"KAA-fee / bus", cat:"Adjectives", hint:"'Bas!' = Stop! Enough!", trick:"'Kaafi' wie 'Kaffee' — genug Kaffee! Und 'Bus' — Stopp, der Bus hält!" },
-  { id:104, front:"Young", back:"जवान", tl:"Javaan", pron:"ja-VAAN", cat:"Adjectives", hint:"'Jawaan' also means 'soldier' — because soldiers are young and strong.", trick:"'Javaan' — klingt wie 'Java-n' — junge Leute programmieren Java!" },
+  { id:63, front:"Wet", back:"गीला", tl:"Geela", pron:"GEE-laa", cat:"Adjectives", hint:"Monsoon essential!", trick:"'Geela' — wie 'Gela(to)' — Gelato wird nass wenn es schmilzt!" },
+  { id:64, front:"Easy", back:"आसान", tl:"Aasaan", pron:"aa-SAAN", cat:"Adjectives", hint:"'Hindi aasaan hai!' = Hindi is easy!", trick:"'Aasaan' — 'Ah, so an(genehm)!' — leicht!" },
+  { id:65, front:"Difficult", back:"मुश्किल", tl:"Mushkil", pron:"MUSH-kil", cat:"Adjectives", hint:"Film: 'Ae Dil Hai Mushkil'.", trick:"'Mushkil' — 'Muschel' — schwer zu öffnen!" },
+  { id:66, front:"Bad", back:"बुरा", tl:"Buraa", pron:"boo-RAA", cat:"Adjectives", hint:"'Bura mat maano, Holi hai!'", trick:"'Buraa' — 'Buhrufe' — Buhrufe sind schlecht!" },
+  { id:67, front:"Interesting", back:"दिलचस्प", tl:"Dilchasp", pron:"dil-CHUSP", cat:"Adjectives", hint:"'Dil' (heart) + 'chasp' (sticking).", trick:"'Dilchasp' — 'Dill-Chasp' — interessanter Dill!" },
+  { id:68, front:"Enough", back:"काफ़ी / बस", tl:"Kaafi / Bas", pron:"KAA-fee / bus", cat:"Adjectives", hint:"'Bas!' = Stop! Enough!", trick:"'Kaafi' wie 'Kaffee' — genug Kaffee!" },
+  { id:104, front:"Young", back:"जवान", tl:"Javaan", pron:"ja-VAAN", cat:"Adjectives", hint:"Also means 'soldier' — soldiers are young and strong.", trick:"'Javaan' — 'Java-n' — junge Leute programmieren Java!" },
+  { id:111, front:"Cold", back:"सर्दी", tl:"Sardi", pron:"SAR-dee", cat:"Adjectives", hint:"Also means 'winter'! 'Sardi ka mausam' = winter season.", trick:"'Sardi' — klingt wie 'Sardine' — Sardinen leben im kalten Wasser!" },
 
-  // Verbs
+  // ——— VERBS ———
   { id:69, front:"To speak", back:"बोलना", tl:"Bolnaa", pron:"BOWL-naa", cat:"Verbs", hint:"'Bol!' = Speak! Tell me!", trick:"'Bolnaa' — wie 'Bowling' — beim Bowling spricht man laut!" },
-  { id:70, front:"To learn", back:"सीखना", tl:"Seekhna", pron:"SEEKH-naa", cat:"Verbs", hint:"'Main Hindi seekh raha hoon' = I'm learning Hindi.", trick:"'Seekhna' — wie 'Sikh' — von den Sikhs kann man viel lernen!" },
-  { id:71, front:"To walk", back:"चलना", tl:"Chalnaa", pron:"CHUL-naa", cat:"Verbs", hint:"'Chalo!' = Let's go!", trick:"'Chalnaa' — wie 'Schall-na' — beim Gehen macht man Schall!" },
-  { id:72, front:"To read", back:"पढ़ना", tl:"Padhna", pron:"PUDH-naa — hard 'dh'", cat:"Verbs", hint:"Also = 'to study'.", trick:"'Padhna' — wie 'Pad' (Tablet) — auf dem Pad liest man!" },
-  { id:73, front:"To ask", back:"पूछना", tl:"Poochhnaa", pron:"POOCHH-naa", cat:"Verbs", hint:"'Kuch poochna hai' = I want to ask something.", trick:"'Poochna' — wie 'Putsch-na' — nach einem Putsch fragt jeder 'Was?'" },
-  { id:74, front:"To start", back:"शुरू करना", tl:"Shuru karnaa", pron:"shoo-ROO kar-NAA", cat:"Verbs", hint:"'Shuru karte hain!' = Let's begin!", trick:"'Shuru' — wie 'Schuh-Ruh' — zieh die Schuhe an und starte!" },
-  { id:105, front:"To understand", back:"समझना", tl:"Samajhna", pron:"sa-MUJH-naa", cat:"Verbs", hint:"'Samajh aaya?' = Did you understand? Very common phrase.", trick:"'Samajhna' — wie 'Sam, Ach ja!' — Sam versteht es endlich!" },
+  { id:70, front:"To learn", back:"सीखना", tl:"Seekhna", pron:"SEEKH-naa", cat:"Verbs", hint:"'Main Hindi seekh raha hoon' = I'm learning Hindi.", trick:"'Seekhna' — von den Sikhs kann man viel lernen!" },
+  { id:71, front:"To walk", back:"चलना", tl:"Chalnaa", pron:"CHUL-naa", cat:"Verbs", hint:"'Chalo!' = Let's go!", trick:"'Chalnaa' — 'Schall-na' — beim Gehen macht man Schall!" },
+  { id:72, front:"To read", back:"पढ़ना", tl:"Padhna", pron:"PUDH-naa — hard 'dh'", cat:"Verbs", hint:"Also = 'to study'.", trick:"'Padhna' — wie 'Pad' — auf dem Pad liest man!" },
+  { id:73, front:"To ask", back:"पूछना", tl:"Poochhnaa", pron:"POOCHH-naa", cat:"Verbs", hint:"'Kuch poochna hai' = I want to ask.", trick:"'Poochna' — 'Putsch-na' — nach einem Putsch fragt jeder." },
+  { id:74, front:"To start", back:"शुरू करना", tl:"Shuru karnaa", pron:"shoo-ROO kar-NAA", cat:"Verbs", hint:"'Shuru karte hain!' = Let's begin!", trick:"'Shuru' — 'Schuh-Ruh' — Schuhe an und starte!" },
+  { id:105, front:"To understand", back:"समझना", tl:"Samajhna", pron:"sa-MUJH-naa", cat:"Verbs", hint:"'Samajh aaya?' = Did you understand?", trick:"'Samajhna' — 'Sam, Ach ja!' — Sam versteht es endlich!" },
+  { id:114, front:"To sit", back:"बैठना", tl:"Baithna", pron:"BAITH-naa", cat:"Verbs", hint:"'Baitho!' = Sit down! (casual command). 'Baithiye' = please sit (polite).", trick:"'Baithna' — klingt wie 'Byte-na' — setz dich und programmiere ein paar Bytes!" },
 
-  // Phrases
-  { id:75, front:"Message", back:"संदेश", tl:"Sandesh", pron:"sun-DAYSH", cat:"Phrases", hint:"Also a Bengali sweet!", trick:"'Sandesh' — wie 'Sand-Esch(e)' — eine Nachricht in den Sand unter der Esche." },
-  { id:76, front:"Answer", back:"जवाब", tl:"Javaab", pron:"ja-VAAB", cat:"Phrases", hint:"'Javaab do!' = Answer me!", trick:"'Javaab' — wie 'Ja, waab!' — Ja, die Antwort webt sich zusammen!" },
-  { id:77, front:"Maybe", back:"शायद", tl:"Shaayad", pron:"SHAA-yad", cat:"Phrases", hint:"Very poetic Urdu word.", trick:"'Shaayad' — wie 'Schade' — schade, vielleicht klappt es!" },
-  { id:78, front:"Something else?", back:"कुछ और?", tl:"Kuchh aur?", pron:"kootch OWR?", cat:"Phrases", hint:"Shopkeepers say this constantly!", trick:"'Kuchh aur' — wie 'Kutsch(e) + Ohr' — noch eine Kutsche fürs Ohr?" },
-  { id:79, front:"That's why", back:"इसलिए", tl:"Isliye", pron:"ISS-lee-yay", cat:"Phrases", hint:"Connects cause & effect.", trick:"'Isliye' — wie 'Is(s) lie(ber)' — iss lieber deshalb!" },
-  { id:80, front:"Or", back:"या", tl:"Ya", pron:"yaa — like 'yeah'", cat:"Phrases", hint:"'Chai ya coffee?' = Tea or coffee?", trick:"'Ya' — wie 'Ja' — ja oder nein? Das ist die Frage!" },
-  { id:81, front:"Both", back:"दोनों", tl:"Donon", pron:"DOH-non", cat:"Phrases", hint:"'Donon acche hain' = Both are good.", trick:"'Donon' — wie 'Donner' — beide Donner zusammen, doppelt laut!" },
-  { id:82, front:"With", back:"के साथ", tl:"Ke saath", pron:"kay SAATH", cat:"Phrases", hint:"'Mere saath chalo' = Come with me.", trick:"'Saath' — wie 'Saat' — mit der Saat zusammen pflanzen." },
-  { id:83, front:"For", back:"के लिए", tl:"Ke liye", pron:"kay LEE-yay", cat:"Phrases", hint:"'Mere liye' = for me.", trick:"'Ke liye' — wie 'Kelly, eh' — das ist für Kelly, eh!" },
-  { id:84, front:"Too / Also", back:"भी", tl:"Bhi", pron:"bhee — breathy 'bh'", cat:"Phrases", hint:"'Main bhi' = Me too.", trick:"'Bhi' — wie 'Biene' (kurz) — die Biene will auch!" },
-  { id:85, front:"Right (correct)", back:"सही", tl:"Sahi", pron:"sa-HEE", cat:"Phrases", hint:"'Sahi hai!' = That's right!/Cool!", trick:"'Sahi' — wie 'Sahne' — Sahne ist immer die richtige Wahl!" },
-  { id:86, front:"I live in Hamburg", back:"मैं हैम्बर्ग में रहता हूँ", tl:"Main Hamburg mein rehta hoon", pron:"main Hamburg mayn REH-taa hoon", cat:"Phrases", hint:"'Rehta' (male) / 'rehti' (female).", trick:"Einfach: 'Main' = ich, 'mein' = in, 'rehta hoon' = wohne — fast wie Deutsch!" },
-  { id:106, front:"More", back:"और / ज़्यादा", tl:"Aur / Zyaada", pron:"OWR / zyaa-DAA", cat:"Phrases", hint:"'Aur' also means 'and'. 'Zyaada' = more (quantity).", trick:"'Aur' klingt wie 'Ohr' — ich will mehr Ohren zum Hören! 'Zyaada' wie 'Zieh da!' — zieh da noch mehr raus!" },
-  { id:107, front:"Group", back:"समूह", tl:"Samooh", pron:"sa-MOOH", cat:"Phrases", hint:"'Samooh' is formal. Casually people say 'group' in Hinglish.", trick:"'Samooh' — wie 'Sam, uh!' — Sam ruft die Gruppe zusammen!" },
-  { id:108, front:"I am doing well", back:"मैं ठीक हूँ", tl:"Main theek hoon", pron:"main THEEK hoon", cat:"Phrases", hint:"The standard reply to 'Aap kaise hain?' (How are you?). 'Theek' = fine/okay.", trick:"'Theek' klingt wie 'Tick' — alles tickt richtig, mir geht's gut!" },
-  { id:109, front:"Customer", back:"ग्राहक", tl:"Graahak", pron:"GRAA-hak", cat:"Phrases", hint:"'Graahak bhagwaan hai' = The customer is God.", trick:"'Graahak' — klingt wie 'Gra(b)-Hack' — der Kunde hackt nach Angeboten!" },
-  { id:110, front:"Journey", back:"यात्रा", tl:"Yaatraa", pron:"YAA-traa", cat:"Phrases", hint:"'Yatra' is also used for pilgrimages. 'Safar' is the casual Urdu alternative.", trick:"'Yaatraa' — wie 'Ja, Trage!' — ja, trage deinen Koffer auf die Reise!" },
+  // ——— COMMON WORDS ———
+  { id:75, front:"Message", back:"संदेश", tl:"Sandesh", pron:"sun-DAYSH", cat:"Common Words", hint:"Also a Bengali sweet!", trick:"'Sandesh' — 'Sand-Esch(e)' — Nachricht in den Sand." },
+  { id:76, front:"Answer", back:"जवाब", tl:"Javaab", pron:"ja-VAAB", cat:"Common Words", hint:"'Javaab do!' = Answer me!", trick:"'Javaab' — 'Ja, waab!' — die Antwort webt sich zusammen!" },
+  { id:77, front:"Maybe", back:"शायद", tl:"Shaayad", pron:"SHAA-yad", cat:"Common Words", hint:"Very poetic Urdu word.", trick:"'Shaayad' — wie 'Schade' — schade, vielleicht!" },
+  { id:80, front:"Or", back:"या", tl:"Ya", pron:"yaa — like 'yeah'", cat:"Common Words", hint:"'Chai ya coffee?' = Tea or coffee?", trick:"'Ya' — wie 'Ja' — ja oder nein?" },
+  { id:81, front:"Both", back:"दोनों", tl:"Donon", pron:"DOH-non", cat:"Common Words", hint:"'Donon acche hain' = Both are good.", trick:"'Donon' — wie 'Donner' — beide Donner, doppelt laut!" },
+  { id:82, front:"With", back:"के साथ", tl:"Ke saath", pron:"kay SAATH", cat:"Common Words", hint:"'Mere saath chalo' = Come with me.", trick:"'Saath' — wie 'Saat' — mit der Saat zusammen pflanzen." },
+  { id:83, front:"For", back:"के लिए", tl:"Ke liye", pron:"kay LEE-yay", cat:"Common Words", hint:"'Mere liye' = for me.", trick:"'Ke liye' — 'Kelly, eh' — das ist für Kelly!" },
+  { id:84, front:"Too / Also", back:"भी", tl:"Bhi", pron:"bhee — breathy 'bh'", cat:"Common Words", hint:"'Main bhi' = Me too.", trick:"'Bhi' — wie 'Biene' — die Biene will auch!" },
+  { id:85, front:"Right (correct)", back:"सही", tl:"Sahi", pron:"sa-HEE", cat:"Common Words", hint:"'Sahi hai!' = That's right!/Cool!", trick:"'Sahi' — wie 'Sahne' — Sahne ist die richtige Wahl!" },
+  { id:79, front:"That's why", back:"इसलिए", tl:"Isliye", pron:"ISS-lee-yay", cat:"Common Words", hint:"Connects cause & effect.", trick:"'Isliye' — 'Is(s) lie(ber)' — iss lieber deshalb!" },
+  { id:106, front:"More", back:"और / ज़्यादा", tl:"Aur / Zyaada", pron:"OWR / zyaa-DAA", cat:"Common Words", hint:"'Aur' also means 'and'. 'Zyaada' = more (quantity).", trick:"'Aur' klingt wie 'Ohr' — mehr Ohren zum Hören!" },
+  { id:107, front:"Group", back:"समूह", tl:"Samooh", pron:"sa-MOOH", cat:"Common Words", hint:"Formal. Casually people say 'group' in Hinglish.", trick:"'Samooh' — 'Sam, uh!' — Sam ruft die Gruppe zusammen!" },
+  { id:110, front:"Journey", back:"यात्रा", tl:"Yaatraa", pron:"YAA-traa", cat:"Common Words", hint:"Also used for pilgrimages. 'Safar' is the casual alternative.", trick:"'Yaatraa' — 'Ja, Trage!' — trage deinen Koffer auf die Reise!" },
+
+  // ——— EVERYDAY SENTENCES ———
+  { id:78, front:"Something else?", back:"कुछ और?", tl:"Kuchh aur?", pron:"kootch OWR?", cat:"Sentences", hint:"Shopkeepers say this constantly!", trick:"'Kuchh aur' — 'Kutsch(e) + Ohr' — noch eine Kutsche fürs Ohr?" },
+  { id:86, front:"I live in Hamburg", back:"मैं हैम्बर्ग में रहता हूँ", tl:"Main Hamburg mein rehta hoon", pron:"main Hamburg mayn REH-taa hoon", cat:"Sentences", hint:"'Rehta' (male) / 'rehti' (female).", trick:"'Main' = ich, 'mein' = in, 'rehta hoon' = wohne — fast wie Deutsch!" },
+  { id:108, front:"I am doing well", back:"मैं ठीक हूँ", tl:"Main theek hoon", pron:"main THEEK hoon", cat:"Sentences", hint:"Standard reply to 'Aap kaise hain?' (How are you?).", trick:"'Theek' klingt wie 'Tick' — alles tickt richtig, mir geht's gut!" },
+  { id:116, front:"I'm good as well", back:"मैं भी ठीक हूँ", tl:"Main bhi theek hoon", pron:"main bhee THEEK hoon", cat:"Sentences", hint:"Reply when someone says they're fine and asks you back. 'Bhi' = also.", trick:"Einfach 'bhi' (auch) einfügen! 'Main bhi theek' — mir geht's auch gut!" },
 ];
 
 const CATEGORIES = ["All", ...Array.from(new Set(ALL_CARDS.map(c => c.cat)))];
-const CC = { Numbers:"#E8785A","Family & People":"#B07CC8","Body Parts":"#E8708A","Nature & Weather":"#5AB8C8",Colors:"#D4A84A","Food & Home":"#5CB87A",Places:"#6A9EE0",Time:"#E8A05A",Emotions:"#D87098",Adjectives:"#5AAA8A",Verbs:"#9A7ACA",Phrases:"#7A88D8" };
+const CC = { Numbers:"#E8785A","Family & People":"#B07CC8","Body Parts":"#E8708A","Nature & Weather":"#5AB8C8",Colors:"#D4A84A","Food & Home":"#5CB87A",Places:"#6A9EE0",Time:"#E8A05A",Emotions:"#D87098",Adjectives:"#5AAA8A",Verbs:"#9A7ACA","Common Words":"#7A88D8",Sentences:"#E88A6A" };
 
 const LIGHT = {
   bg:"#FFF",
@@ -258,7 +266,7 @@ export default function App(){
             <p style={{fontSize:16,color:T.sub,margin:"3px 0 0",fontWeight:400}}>{ALL_CARDS.length} words · Tap to flip</p>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:5,alignItems:"flex-end"}}>
-            <button onClick={()=>setDark(d=>!d)} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 13px",borderRadius:20,background:T.togBg,border:`1px solid ${T.pillBd}`,cursor:"pointer",fontSize:14,fontFamily:"inherit",color:T.togTx,fontWeight:600,transition:"all .3s"}}>
+            <button onClick={()=>setDark(d=>!d)} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 13px",borderRadius:20,background:T.togBg,border:`1px solid ${T.pillBd}`,cursor:"pointer",fontSize:14,fontFamily:"inherit",color:T.togTx,fontWeight:600}}>
               {dark?"☀️":"🌙"} {dark?"Light":"Dark"}
             </button>
             {supported&&(
@@ -320,7 +328,7 @@ export default function App(){
             }}>
               <div style={{position:"absolute",top:16,right:18,fontSize:13,color:T.muted,letterSpacing:1.5,textTransform:"uppercase",fontWeight:600}}>English</div>
               {st(card?.id)!=="u"&&<div style={{position:"absolute",top:16,left:18,padding:"4px 12px",borderRadius:10,fontSize:12,fontWeight:700,background:st(card?.id)==="k"?"#5CB87A18":"#D4A84A18",color:st(card?.id)==="k"?"#5CB87A":"#D4A84A"}}>{st(card?.id)==="k"?"Mastered":"Learning"}</div>}
-              <div style={{fontSize:card?.front.length>20?30:46,fontWeight:800,textAlign:"center",lineHeight:1.25,color:T.text}}>{card?.front}</div>
+              <div style={{fontSize:card?.front.length>20?28:46,fontWeight:800,textAlign:"center",lineHeight:1.25,color:T.text}}>{card?.front}</div>
               <div style={{marginTop:20,fontSize:15,color:T.muted,display:"flex",alignItems:"center",gap:7,background:dark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.02)",padding:"8px 16px",borderRadius:12}}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
                 tap to flip
@@ -335,48 +343,29 @@ export default function App(){
               border:`1.5px solid ${color}${dark?"30":"18"}`,
               display:"flex",flexDirection:"column",alignItems:"center",
               padding:"14px 14px 16px",boxShadow:`${T.cardShadow}, 0 0 60px ${color}${dark?"10":"06"}`,
-              transition:"all .4s",overflowY:"auto",gap:0,
-              justifyContent:"flex-start",paddingTop:38,
+              transition:"all .4s",overflowY:"auto",justifyContent:"flex-start",paddingTop:38,
             }}>
               <div style={{position:"absolute",top:12,right:16,fontSize:12,color,letterSpacing:1.5,textTransform:"uppercase",fontWeight:700,opacity:.8,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी</div>
 
-              {/* Hindi text */}
               <div style={{fontFamily:"'Noto Sans Devanagari',sans-serif",fontSize:card?.back.length>14?34:52,fontWeight:700,textAlign:"center",color:T.text,lineHeight:1.3,whiteSpace:"pre-line"}}>{card?.back}</div>
-
-              {/* Transliteration */}
               <div style={{marginTop:2,fontSize:20,fontWeight:600,color,letterSpacing:.5}}>{card?.tl}</div>
 
               {/* SPEED CONTROL */}
               {supported&&(
-                <div onClick={e=>e.stopPropagation()} style={{
-                  marginTop:10,padding:"5px 5px",borderRadius:16,
-                  background:T.speedBg,border:`1px solid ${T.speedBd}`,
-                  display:"flex",gap:4,alignItems:"stretch",
-                  width:"100%",maxWidth:420,
-                }}>
+                <div onClick={e=>e.stopPropagation()} style={{marginTop:10,padding:"5px 5px",borderRadius:16,background:T.speedBg,border:`1px solid ${T.speedBd}`,display:"flex",gap:4,alignItems:"stretch",width:"100%",maxWidth:420}}>
                   {SPEEDS.map(sp=>{
                     const isA=speaking&&activeSpeed===sp.key;
                     return(
                       <button className="speed-btn" key={sp.key} onClick={e=>handlePlay(e,sp)} style={{
                         flex:1,padding:"8px 4px",borderRadius:12,border:"1.5px solid",
-                        borderColor:isA?`${color}66`:"transparent",
-                        background:isA?T.speedActive:"transparent",
-                        color:isA?color:T.sub,
+                        borderColor:isA?`${color}66`:"transparent",background:isA?T.speedActive:"transparent",color:isA?color:T.sub,
                         cursor:"pointer",fontSize:11,fontFamily:"inherit",fontWeight:600,
                         display:"flex",flexDirection:"column",alignItems:"center",gap:2,
-                        transition:"all .25s",
-                        animation:isA?"speakPulse 1.2s ease-in-out infinite":"none",
+                        transition:"all .25s",animation:isA?"speakPulse 1.2s ease-in-out infinite":"none",
                       }}>
                         <div style={{display:"flex",alignItems:"center",gap:4}}>
-                          {isA?(
-                            <div style={{display:"flex",gap:2,alignItems:"flex-end",height:14}}>
-                              {[0,1,2,3].map(b=>(
-                                <div key={b} style={{width:3,height:14,borderRadius:2,background:color,animation:`barBounce 0.${5+b*2}s ease-in-out infinite`,animationDelay:`${b*.1}s`}}/>
-                              ))}
-                            </div>
-                          ):(
-                            <span style={{fontSize:15}}>{sp.emoji}</span>
-                          )}
+                          {isA?(<div style={{display:"flex",gap:2,alignItems:"flex-end",height:14}}>{[0,1,2,3].map(b=>(<div key={b} style={{width:3,height:14,borderRadius:2,background:color,animation:`barBounce 0.${5+b*2}s ease-in-out infinite`,animationDelay:`${b*.1}s`}}/>))}</div>
+                          ):(<span style={{fontSize:15}}>{sp.emoji}</span>)}
                           <span style={{fontSize:14,fontWeight:700}}>{sp.label}</span>
                         </div>
                         <div style={{fontSize:10,opacity:.6,fontWeight:400}}>{sp.desc}</div>
@@ -386,17 +375,12 @@ export default function App(){
                 </div>
               )}
 
-              {/* Pronunciation */}
               <div style={{marginTop:8,padding:"6px 14px",borderRadius:12,background:T.pronBg,border:`1px solid ${T.pronBd}`,fontSize:15,color,fontWeight:500,display:"flex",alignItems:"center",gap:6,textAlign:"center",lineHeight:1.4,width:"100%",maxWidth:420,justifyContent:"center"}}>
                 📢 {card?.pron}
               </div>
-
-              {/* German memory trick */}
               <div style={{marginTop:6,padding:"7px 14px",borderRadius:12,background:T.trickBg,border:`1px solid ${T.trickBd}`,fontSize:14,color:T.trickTx,lineHeight:1.5,textAlign:"center",width:"100%",maxWidth:420,fontWeight:500}}>
                 🇩🇪 {card?.trick}
               </div>
-
-              {/* Hint */}
               <div style={{marginTop:6,padding:"7px 14px",borderRadius:12,background:T.hintBg,border:`1px solid ${T.hintBd}`,fontSize:13,color:T.hintTx,lineHeight:1.5,textAlign:"center",width:"100%",maxWidth:420,fontWeight:400}}>
                 💡 {card?.hint}
               </div>
@@ -407,12 +391,8 @@ export default function App(){
         {/* CONTROLS */}
         <div style={{display:"flex",gap:8,justifyContent:"center",alignItems:"center",marginBottom:10}}>
           <button onClick={()=>nav(-1)} style={{width:50,height:50,borderRadius:"50%",border:`1px solid ${T.btnBd}`,background:T.btnBg,color:T.btnTx,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontFamily:"inherit"}}>‹</button>
-          <button onClick={()=>mark("l")} style={{padding:"12px 22px",borderRadius:18,border:"1.5px solid #D4A84A44",background:"#D4A84A10",color:"#D4A84A",cursor:"pointer",fontSize:16,fontFamily:"inherit",fontWeight:700,display:"flex",alignItems:"center",gap:6}}>
-            🔄 Learning
-          </button>
-          <button onClick={()=>mark("k")} style={{padding:"12px 22px",borderRadius:18,border:"1.5px solid #5CB87A44",background:"#5CB87A10",color:"#5CB87A",cursor:"pointer",fontSize:16,fontFamily:"inherit",fontWeight:700,display:"flex",alignItems:"center",gap:6}}>
-            ✅ Know it
-          </button>
+          <button onClick={()=>mark("l")} style={{padding:"12px 22px",borderRadius:18,border:"1.5px solid #D4A84A44",background:"#D4A84A10",color:"#D4A84A",cursor:"pointer",fontSize:16,fontFamily:"inherit",fontWeight:700,display:"flex",alignItems:"center",gap:6}}>🔄 Learning</button>
+          <button onClick={()=>mark("k")} style={{padding:"12px 22px",borderRadius:18,border:"1.5px solid #5CB87A44",background:"#5CB87A10",color:"#5CB87A",cursor:"pointer",fontSize:16,fontFamily:"inherit",fontWeight:700,display:"flex",alignItems:"center",gap:6}}>✅ Know it</button>
           <button onClick={()=>nav(1)} style={{width:50,height:50,borderRadius:"50%",border:`1px solid ${T.btnBd}`,background:T.btnBg,color:T.btnTx,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontFamily:"inherit"}}>›</button>
         </div>
 
