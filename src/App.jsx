@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { auth, db } from "./firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 
 const ALL_CARDS = [
   { id:1, front:"One (1)", back:"एक", tl:"Ek", pron:"ehk — rhymes with 'check'", cat:"Numbers", hint:"Also means 'a/an' — 'ek aadmi' = 'a man'.", trick:"Klingt wie 'Eck' (Ecke) — eine Ecke hat einen Punkt = eins." },
@@ -111,434 +111,305 @@ const ALL_CARDS = [
   { id:116, front:"I'm good as well", back:"मैं भी ठीक हूँ", tl:"Main bhi theek hoon", pron:"main bhee THEEK hoon", cat:"Sentences", hint:"Reply when someone asks you back. 'Bhi' = also.", trick:"Einfach 'bhi' (auch) einfügen! Mir geht's auch gut!" },
 ];
 
-const CATEGORIES = ["All", ...Array.from(new Set(ALL_CARDS.map(c => c.cat)))];
-const CC = { Numbers:"#E8785A","Family & People":"#B07CC8","Body Parts":"#E8708A","Nature & Weather":"#5AB8C8",Colors:"#D4A84A","Food & Home":"#5CB87A",Places:"#6A9EE0",Time:"#E8A05A",Emotions:"#D87098",Adjectives:"#5AAA8A",Verbs:"#9A7ACA","Common Words":"#7A88D8",Sentences:"#E88A6A" };
+const CATEGORIES=["All",...Array.from(new Set(ALL_CARDS.map(c=>c.cat)))];
+const CC={Numbers:"#E8785A","Family & People":"#B07CC8","Body Parts":"#E8708A","Nature & Weather":"#5AB8C8",Colors:"#D4A84A","Food & Home":"#5CB87A",Places:"#6A9EE0",Time:"#E8A05A",Emotions:"#D87098",Adjectives:"#5AAA8A",Verbs:"#9A7ACA","Common Words":"#7A88D8",Sentences:"#E88A6A"};
+const LIGHT={bg:"#FFF",bgGrad:"linear-gradient(150deg,#FFF0F3 0%,#FDE8EF 15%,#F5EDFF 30%,#E8F0FF 50%,#E6FAF5 68%,#FFFAE6 85%,#FFF0F0 100%)",cardFront:"linear-gradient(155deg,#FFFFFF 0%,#FFF8FA 40%,#FBF5FF 70%,#F5F8FF 100%)",text:"#2D2530",sub:"#5C5060",muted:"#9A90A0",faint:"#D0C8D4",hintBg:"rgba(180,120,200,0.05)",hintBd:"rgba(180,120,200,0.12)",hintTx:"#6A5878",trickBg:"rgba(90,184,122,0.06)",trickBd:"rgba(90,184,122,0.16)",trickTx:"#3A7A52",pillBg:"#FFFFFF",pillBd:"rgba(0,0,0,0.06)",btnBg:"#FFFFFF",btnBd:"rgba(0,0,0,0.07)",btnTx:"#7A7080",dotBg:"rgba(0,0,0,0.07)",divider:"rgba(0,0,0,0.06)",shadow:"0 3px 16px rgba(0,0,0,0.04)",cardShadow:"0 6px 32px rgba(0,0,0,0.05),0 2px 6px rgba(0,0,0,0.03)",togBg:"#FFFFFF",togTx:"#2D2530",accent:"#D87098",pronBg:"rgba(216,112,152,0.07)",pronBd:"rgba(216,112,152,0.18)",speedBg:"rgba(216,112,152,0.04)",speedBd:"rgba(216,112,152,0.10)",speedActive:"rgba(216,112,152,0.10)",speedActiveBd:"rgba(216,112,152,0.30)",inputBg:"#FFFFFF",inputBd:"rgba(0,0,0,0.10)",overlayBg:"rgba(255,255,255,0.95)",swipeKnow:"#5CB87A",swipeLearn:"#D4A84A"};
+const DARK={bg:"#110E14",bgGrad:"linear-gradient(150deg,#16101C 0%,#1A1220 25%,#12141E 50%,#141018 75%,#18141C 100%)",cardFront:"linear-gradient(155deg,#1E1826 0%,#1A1520 50%,#161220 100%)",text:"#F0EAF0",sub:"#908498",muted:"#5A5060",faint:"#3A3440",hintBg:"rgba(255,255,255,0.03)",hintBd:"rgba(255,255,255,0.06)",hintTx:"#908498",trickBg:"rgba(90,184,122,0.08)",trickBd:"rgba(90,184,122,0.15)",trickTx:"#7AC89A",pillBg:"rgba(255,255,255,0.04)",pillBd:"rgba(255,255,255,0.07)",btnBg:"rgba(255,255,255,0.04)",btnBd:"rgba(255,255,255,0.07)",btnTx:"#908498",dotBg:"rgba(255,255,255,0.08)",divider:"rgba(255,255,255,0.05)",shadow:"0 2px 14px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.03)",cardShadow:"0 6px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.03)",togBg:"rgba(255,255,255,0.06)",togTx:"#F0EAF0",accent:"#E8889A",pronBg:"rgba(232,136,154,0.10)",pronBd:"rgba(232,136,154,0.22)",speedBg:"rgba(255,255,255,0.03)",speedBd:"rgba(255,255,255,0.06)",speedActive:"rgba(232,136,154,0.12)",speedActiveBd:"rgba(232,136,154,0.30)",inputBg:"rgba(255,255,255,0.06)",inputBd:"rgba(255,255,255,0.10)",overlayBg:"rgba(17,14,20,0.96)",swipeKnow:"#5CB87A",swipeLearn:"#D4A84A"};
 
-const LIGHT = {
-  bg:"#FFF",bgGrad:"linear-gradient(150deg, #FFF0F3 0%, #FDE8EF 15%, #F5EDFF 30%, #E8F0FF 50%, #E6FAF5 68%, #FFFAE6 85%, #FFF0F0 100%)",
-  cardFront:"linear-gradient(155deg, #FFFFFF 0%, #FFF8FA 40%, #FBF5FF 70%, #F5F8FF 100%)",
-  text:"#2D2530",sub:"#5C5060",muted:"#9A90A0",faint:"#D0C8D4",
-  hintBg:"rgba(180,120,200,0.05)",hintBd:"rgba(180,120,200,0.12)",hintTx:"#6A5878",
-  trickBg:"rgba(90,184,122,0.06)",trickBd:"rgba(90,184,122,0.16)",trickTx:"#3A7A52",
-  pillBg:"#FFFFFF",pillBd:"rgba(0,0,0,0.06)",btnBg:"#FFFFFF",btnBd:"rgba(0,0,0,0.07)",btnTx:"#7A7080",
-  dotBg:"rgba(0,0,0,0.07)",divider:"rgba(0,0,0,0.06)",
-  shadow:"0 3px 16px rgba(0,0,0,0.04)",cardShadow:"0 6px 32px rgba(0,0,0,0.05), 0 2px 6px rgba(0,0,0,0.03)",
-  togBg:"#FFFFFF",togTx:"#2D2530",accent:"#D87098",
-  pronBg:"rgba(216,112,152,0.07)",pronBd:"rgba(216,112,152,0.18)",
-  speedBg:"rgba(216,112,152,0.04)",speedBd:"rgba(216,112,152,0.10)",
-  speedActive:"rgba(216,112,152,0.10)",speedActiveBd:"rgba(216,112,152,0.30)",
-  inputBg:"#FFFFFF",inputBd:"rgba(0,0,0,0.10)",
-};
-const DARK = {
-  bg:"#110E14",bgGrad:"linear-gradient(150deg, #16101C 0%, #1A1220 25%, #12141E 50%, #141018 75%, #18141C 100%)",
-  cardFront:"linear-gradient(155deg, #1E1826 0%, #1A1520 50%, #161220 100%)",
-  text:"#F0EAF0",sub:"#908498",muted:"#5A5060",faint:"#3A3440",
-  hintBg:"rgba(255,255,255,0.03)",hintBd:"rgba(255,255,255,0.06)",hintTx:"#908498",
-  trickBg:"rgba(90,184,122,0.08)",trickBd:"rgba(90,184,122,0.15)",trickTx:"#7AC89A",
-  pillBg:"rgba(255,255,255,0.04)",pillBd:"rgba(255,255,255,0.07)",btnBg:"rgba(255,255,255,0.04)",btnBd:"rgba(255,255,255,0.07)",btnTx:"#908498",
-  dotBg:"rgba(255,255,255,0.08)",divider:"rgba(255,255,255,0.05)",
-  shadow:"0 2px 14px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)",
-  cardShadow:"0 6px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
-  togBg:"rgba(255,255,255,0.06)",togTx:"#F0EAF0",accent:"#E8889A",
-  pronBg:"rgba(232,136,154,0.10)",pronBd:"rgba(232,136,154,0.22)",
-  speedBg:"rgba(255,255,255,0.03)",speedBd:"rgba(255,255,255,0.06)",
-  speedActive:"rgba(232,136,154,0.12)",speedActiveBd:"rgba(232,136,154,0.30)",
-  inputBg:"rgba(255,255,255,0.06)",inputBd:"rgba(255,255,255,0.10)",
-};
-
-const SPEEDS = [
-  { key:"normal", label:"Normal", rate:0.82, emoji:"🗣️", desc:"Conversational" },
-  { key:"slow", label:"Slow", rate:0.35, emoji:"🐢", desc:"Hear each word" },
-  { key:"slower", label:"Very Slow", rate:0.15, emoji:"🔬", desc:"Every syllable" },
+const SPEEDS=[
+  {key:"normal",label:"Normal",rate:0.82,emoji:"🗣️",desc:"Conversational"},
+  {key:"slow",label:"Slow",rate:0.15,emoji:"🐢",desc:"Every syllable"},
 ];
 
+// ——— Hooks ———
 function useSpeech(){
-  const [speaking,setSpeaking]=useState(false);
-  const [activeSpeed,setActiveSpeed]=useState(null);
-  const [hindiVoice,setHindiVoice]=useState(null);
-  const synthRef=useRef(null);
-  useEffect(()=>{
-    if(typeof window==="undefined"||!window.speechSynthesis)return;
-    synthRef.current=window.speechSynthesis;
-    const pick=()=>{const v=synthRef.current.getVoices();setHindiVoice(v.find(x=>x.lang==="hi-IN")||v.find(x=>x.lang.startsWith("hi"))||null);};
-    pick();synthRef.current.addEventListener("voiceschanged",pick);
-    return()=>synthRef.current?.removeEventListener("voiceschanged",pick);
-  },[]);
-  const speak=useCallback((text,rate=0.82,key="normal")=>{
-    if(!synthRef.current)return;synthRef.current.cancel();
-    const u=new SpeechSynthesisUtterance(text.replace(/\s*\/\s*/g," ").replace(/\n/g," "));
-    u.lang="hi-IN";u.rate=rate;u.pitch=1;if(hindiVoice)u.voice=hindiVoice;
-    u.onstart=()=>{setSpeaking(true);setActiveSpeed(key);};
-    u.onend=()=>{setSpeaking(false);setActiveSpeed(null);};
-    u.onerror=()=>{setSpeaking(false);setActiveSpeed(null);};
-    synthRef.current.speak(u);
-  },[hindiVoice]);
+  const[speaking,setSpeaking]=useState(false);const[activeSpeed,setActiveSpeed]=useState(null);const[hindiVoice,setHindiVoice]=useState(null);const synthRef=useRef(null);
+  useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;synthRef.current=window.speechSynthesis;const pick=()=>{const v=synthRef.current.getVoices();setHindiVoice(v.find(x=>x.lang==="hi-IN")||v.find(x=>x.lang.startsWith("hi"))||null);};pick();synthRef.current.addEventListener("voiceschanged",pick);return()=>synthRef.current?.removeEventListener("voiceschanged",pick);},[]);
+  const speak=useCallback((text,rate=0.82,key="normal")=>{if(!synthRef.current)return;synthRef.current.cancel();const u=new SpeechSynthesisUtterance(text.replace(/\s*\/\s*/g," ").replace(/\n/g," "));u.lang="hi-IN";u.rate=rate;u.pitch=1;if(hindiVoice)u.voice=hindiVoice;u.onstart=()=>{setSpeaking(true);setActiveSpeed(key);};u.onend=()=>{setSpeaking(false);setActiveSpeed(null);};u.onerror=()=>{setSpeaking(false);setActiveSpeed(null);};synthRef.current.speak(u);},[hindiVoice]);
   const stop=useCallback(()=>{synthRef.current?.cancel();setSpeaking(false);setActiveSpeed(null);},[]);
   return{speak,stop,speaking,activeSpeed,supported:typeof window!=="undefined"&&!!window.speechSynthesis};
 }
 
-async function saveProgress(userId, knownIds, learningIds, userName) {
-  try {
-    await setDoc(doc(db, "users", userId), {
-      name: userName || "",
-      known: [...knownIds],
-      learning: [...learningIds],
-      updatedAt: new Date().toISOString(),
-    }, { merge: true });
-  } catch (e) { console.error("Save failed:", e); }
+function useSwipe(onLeft,onRight){
+  const startX=useRef(0);const startY=useRef(0);const swiping=useRef(false);
+  const onTouchStart=useCallback(e=>{startX.current=e.touches[0].clientX;startY.current=e.touches[0].clientY;swiping.current=true;},[]);
+  const onTouchEnd=useCallback(e=>{if(!swiping.current)return;swiping.current=false;const dx=e.changedTouches[0].clientX-startX.current;const dy=e.changedTouches[0].clientY-startY.current;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx>0)onRight();else onLeft();}},[onLeft,onRight]);
+  return{onTouchStart,onTouchEnd};
 }
 
-async function loadProgress(userId) {
-  try {
-    const snap = await getDoc(doc(db, "users", userId));
-    if (snap.exists()) {
-      const data = snap.data();
-      return { known: new Set(data.known || []), learning: new Set(data.learning || []), name: data.name || "" };
-    }
-  } catch (e) { console.error("Load failed:", e); }
-  return { known: new Set(), learning: new Set(), name: "" };
+// ——— Firebase helpers ———
+async function saveProgress(uid,knownIds,learningIds,name){try{await setDoc(doc(db,"users",uid),{name:name||"",known:[...knownIds],learning:[...learningIds],updatedAt:new Date().toISOString()},{merge:true});}catch(e){console.error("Save:",e);}}
+async function loadProgress(uid){try{const s=await getDoc(doc(db,"users",uid));if(s.exists()){const d=s.data();return{known:new Set(d.known||[]),learning:new Set(d.learning||[]),name:d.name||""};}}catch(e){console.error("Load:",e);}return{known:new Set(),learning:new Set(),name:""};}
+
+// ——— Password Input ———
+function PasswordInput({value,onChange,placeholder,onKeyDown,T}){
+  const[vis,setVis]=useState(false);
+  return(<div style={{position:"relative",width:"100%"}}>
+    <input type={vis?"text":"password"} placeholder={placeholder} value={value} onChange={onChange} onKeyDown={onKeyDown} onFocus={e=>e.target.style.borderColor=T.accent} onBlur={e=>e.target.style.borderColor=T.inputBd} style={{width:"100%",padding:"14px 48px 14px 16px",borderRadius:14,border:`1.5px solid ${T.inputBd}`,background:T.inputBg,color:T.text,fontSize:16,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}}/>
+    <button type="button" onClick={()=>setVis(v=>!v)} tabIndex={-1} style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",padding:"6px 8px",color:T.muted,fontSize:14,display:"flex",alignItems:"center"}}>
+      {vis?<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+      :<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+    </button>
+  </div>);
 }
 
-// ——— PASSWORD INPUT WITH TOGGLE ———
-function PasswordInput({ value, onChange, placeholder, onKeyDown, T }) {
-  const [visible, setVisible] = useState(false);
-  return (
-    <div style={{ position: "relative", width: "100%" }}>
-      <input
-        type={visible ? "text" : "password"}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        onKeyDown={onKeyDown}
-        onFocus={e => e.target.style.borderColor = T.accent}
-        onBlur={e => e.target.style.borderColor = T.inputBd}
-        style={{
-          width: "100%", padding: "14px 48px 14px 16px", borderRadius: 14,
-          border: `1.5px solid ${T.inputBd}`, background: T.inputBg, color: T.text,
-          fontSize: 16, fontFamily: "'Outfit',sans-serif", outline: "none",
-          transition: "border-color .2s", boxSizing: "border-box",
-        }}
-      />
-      <button
-        type="button"
-        onClick={() => setVisible(v => !v)}
-        style={{
-          position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
-          background: "none", border: "none", cursor: "pointer", padding: "6px 8px",
-          color: T.muted, fontSize: 14, display: "flex", alignItems: "center",
-        }}
-        tabIndex={-1}
-      >
-        {visible ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
-            <line x1="1" y1="1" x2="23" y2="23"/>
-          </svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-        )}
-      </button>
-    </div>
-  );
-}
-
-// ——— AUTH SCREEN ———
-function AuthScreen({ T }) {
-  const [isSignup, setIsSignup] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async () => {
-    setError("");
-    if (isSignup && !name.trim()) { setError("Please enter your name"); return; }
-    if (!email || !password) { setError("Please fill in all fields"); return; }
-    if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
-    setLoading(true);
-    try {
-      if (isSignup) {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", cred.user.uid), { name: name.trim(), known: [], learning: [], updatedAt: new Date().toISOString() });
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
-    } catch (e) {
-      const msg = e.code === "auth/user-not-found" ? "No account found. Try signing up."
-        : e.code === "auth/wrong-password" ? "Wrong password. Try again."
-        : e.code === "auth/invalid-credential" ? "Invalid email or password."
-        : e.code === "auth/email-already-in-use" ? "Email already registered. Try logging in."
-        : e.code === "auth/invalid-email" ? "Invalid email format."
-        : e.message;
-      setError(msg);
-    }
-    setLoading(false);
-  };
-
-  const inputStyle = {
-    width: "100%", padding: "14px 16px", borderRadius: 14, border: `1.5px solid ${T.inputBd}`,
-    background: T.inputBg, color: T.text, fontSize: 16, fontFamily: "'Outfit',sans-serif",
-    outline: "none", transition: "border-color .2s", boxSizing: "border-box",
-  };
-
-  return (
-    <div style={{ minHeight: "100vh", minWidth: "100vw", background: T.bgGrad, fontFamily: "'Outfit',sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", boxSizing: "border-box" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <div style={{ width: "100%", maxWidth: 400, textAlign: "center" }}>
-        <div style={{ fontSize: 16, letterSpacing: 3, textTransform: "uppercase", color: T.accent, fontWeight: 700, marginBottom: 6, fontFamily: "'Noto Sans Devanagari',sans-serif" }}>हिन्दी सीखें</div>
-        <h1 style={{ fontSize: 36, fontWeight: 800, margin: 0, color: T.text, lineHeight: 1.1 }}>Hindi Flashcards</h1>
-        <p style={{ fontSize: 16, color: T.sub, margin: "8px 0 28px", fontWeight: 400 }}>{isSignup ? "Create your account to save progress" : "Log in to continue learning"}</p>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {isSignup && (
-            <input type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)}
-              style={inputStyle} onFocus={e => e.target.style.borderColor = T.accent} onBlur={e => e.target.style.borderColor = T.inputBd} />
-          )}
-          <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)}
-            style={inputStyle} onFocus={e => e.target.style.borderColor = T.accent} onBlur={e => e.target.style.borderColor = T.inputBd} />
-          <PasswordInput value={password} onChange={e => setPassword(e.target.value)} placeholder="Password (min 6 characters)" onKeyDown={e => e.key === "Enter" && handleSubmit()} T={T} />
-
-          {error && <div style={{ padding: "10px 14px", borderRadius: 12, background: "#F43F5E14", border: "1px solid #F43F5E30", color: "#E11D48", fontSize: 13, fontWeight: 500, textAlign: "left" }}>{error}</div>}
-
-          <button onClick={handleSubmit} disabled={loading} style={{
-            padding: "14px", borderRadius: 16, border: "none",
-            background: `linear-gradient(135deg, ${T.accent}, ${T.accent}CC)`,
-            color: "#FFF", fontSize: 17, fontFamily: "inherit", fontWeight: 700, cursor: loading ? "wait" : "pointer",
-            opacity: loading ? 0.7 : 1, transition: "all .2s", boxShadow: `0 4px 16px ${T.accent}40`,
-          }}>
-            {loading ? "Please wait..." : isSignup ? "Create Account ✨" : "Log In 🚀"}
-          </button>
-
-          <button onClick={() => { setIsSignup(s => !s); setError(""); }} style={{
-            padding: "10px", borderRadius: 12, border: `1px solid ${T.pillBd}`,
-            background: "transparent", color: T.sub, fontSize: 14, fontFamily: "inherit", fontWeight: 500, cursor: "pointer",
-          }}>
-            {isSignup ? "Already have an account? Log in" : "New here? Create an account"}
-          </button>
-        </div>
+// ——— Auth Screen ———
+function AuthScreen({T}){
+  const[isSignup,setIsSignup]=useState(false);const[name,setName]=useState("");const[email,setEmail]=useState("");const[password,setPassword]=useState("");const[error,setError]=useState("");const[loading,setLoading]=useState(false);
+  const handleSubmit=async()=>{setError("");if(isSignup&&!name.trim()){setError("Please enter your name");return;}if(!email||!password){setError("Please fill in all fields");return;}if(password.length<6){setError("Password must be at least 6 characters");return;}setLoading(true);try{if(isSignup){const c=await createUserWithEmailAndPassword(auth,email,password);await setDoc(doc(db,"users",c.user.uid),{name:name.trim(),known:[],learning:[],updatedAt:new Date().toISOString()});}else{await signInWithEmailAndPassword(auth,email,password);}}catch(e){const msg=e.code==="auth/user-not-found"?"No account found. Try signing up.":e.code==="auth/wrong-password"?"Wrong password.":e.code==="auth/invalid-credential"?"Invalid email or password.":e.code==="auth/email-already-in-use"?"Email already registered. Try logging in.":e.code==="auth/invalid-email"?"Invalid email format.":e.message;setError(msg);}setLoading(false);};
+  const iS={width:"100%",padding:"14px 16px",borderRadius:14,border:`1.5px solid ${T.inputBd}`,background:T.inputBg,color:T.text,fontSize:16,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"};
+  return(<div style={{minHeight:"100vh",minWidth:"100vw",background:T.bgGrad,fontFamily:"'Outfit',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",boxSizing:"border-box"}}>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <div style={{width:"100%",maxWidth:400,textAlign:"center"}}>
+      <div style={{fontSize:16,letterSpacing:3,textTransform:"uppercase",color:T.accent,fontWeight:700,marginBottom:6,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी सीखें</div>
+      <h1 style={{fontSize:36,fontWeight:800,margin:0,color:T.text}}>Hindi Flashcards</h1>
+      <p style={{fontSize:16,color:T.sub,margin:"8px 0 28px"}}>{isSignup?"Create your account":"Log in to continue learning"}</p>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {isSignup&&<input type="text" placeholder="Your name" value={name} onChange={e=>setName(e.target.value)} style={iS} onFocus={e=>e.target.style.borderColor=T.accent} onBlur={e=>e.target.style.borderColor=T.inputBd}/>}
+        <input type="email" placeholder="Email address" value={email} onChange={e=>setEmail(e.target.value)} style={iS} onFocus={e=>e.target.style.borderColor=T.accent} onBlur={e=>e.target.style.borderColor=T.inputBd}/>
+        <PasswordInput value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password (min 6 characters)" onKeyDown={e=>e.key==="Enter"&&handleSubmit()} T={T}/>
+        {error&&<div style={{padding:"10px 14px",borderRadius:12,background:"#F43F5E14",border:"1px solid #F43F5E30",color:"#E11D48",fontSize:13,fontWeight:500,textAlign:"left"}}>{error}</div>}
+        <button onClick={handleSubmit} disabled={loading} style={{padding:"14px",borderRadius:16,border:"none",background:`linear-gradient(135deg,${T.accent},${T.accent}CC)`,color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:loading?"wait":"pointer",opacity:loading?.7:1,boxShadow:`0 4px 16px ${T.accent}40`}}>{loading?"Please wait...":isSignup?"Create Account ✨":"Log In 🚀"}</button>
+        <button onClick={()=>{setIsSignup(s=>!s);setError("");}} style={{padding:"10px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:"transparent",color:T.sub,fontSize:14,fontFamily:"inherit",fontWeight:500,cursor:"pointer"}}>{isSignup?"Already have an account? Log in":"New here? Create an account"}</button>
       </div>
     </div>
-  );
+  </div>);
+}
+
+// ——— Settings Panel ———
+function SettingsPanel({T,dark,setDark,autoSpeak,setAutoSpeak,supported,onLogout,onDelete,onClose,displayName,email}){
+  const[confirmDelete,setConfirmDelete]=useState(false);const[delPassword,setDelPassword]=useState("");const[delError,setDelError]=useState("");const[delLoading,setDelLoading]=useState(false);
+  const handleDelete=async()=>{if(!confirmDelete){setConfirmDelete(true);return;}if(!delPassword){setDelError("Enter your password to confirm");return;}setDelLoading(true);setDelError("");try{const cred=EmailAuthProvider.credential(auth.currentUser.email,delPassword);await reauthenticateWithCredential(auth.currentUser,cred);await deleteDoc(doc(db,"users",auth.currentUser.uid));await deleteUser(auth.currentUser);}catch(e){setDelError(e.code==="auth/wrong-password"||e.code==="auth/invalid-credential"?"Wrong password.":"Failed to delete. Try again.");setDelLoading(false);}};
+  return(<div style={{position:"fixed",inset:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.4)",padding:20,boxSizing:"border-box"}} onClick={onClose}>
+    <div onClick={e=>e.stopPropagation()} style={{background:T.overlayBg,borderRadius:24,padding:"28px 24px",width:"100%",maxWidth:400,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.3)",backdropFilter:"blur(20px)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <h2 style={{fontSize:24,fontWeight:800,color:T.text,margin:0}}>⚙️ Settings</h2>
+        <button onClick={onClose} style={{width:36,height:36,borderRadius:"50%",border:`1px solid ${T.pillBd}`,background:T.btnBg,color:T.btnTx,cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit"}}>✕</button>
+      </div>
+      <div style={{fontSize:14,color:T.sub,marginBottom:20}}>{displayName} · {email}</div>
+
+      {/* Dark/Light */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 0",borderBottom:`1px solid ${T.divider}`}}>
+        <div><div style={{fontSize:16,fontWeight:600,color:T.text}}>🌓 Appearance</div><div style={{fontSize:13,color:T.muted}}>Switch between light and dark</div></div>
+        <button onClick={()=>setDark(d=>!d)} style={{padding:"8px 16px",borderRadius:14,border:`1.5px solid ${T.pillBd}`,background:T.btnBg,color:T.text,fontSize:14,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>{dark?"☀️ Light":"🌙 Dark"}</button>
+      </div>
+
+      {/* Auto-play sound */}
+      {supported&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 0",borderBottom:`1px solid ${T.divider}`}}>
+        <div><div style={{fontSize:16,fontWeight:600,color:T.text}}>🔊 Auto-play Sound</div><div style={{fontSize:13,color:T.muted}}>Speak Hindi when card flips</div></div>
+        <button onClick={()=>setAutoSpeak(a=>!a)} style={{padding:"8px 16px",borderRadius:14,border:`1.5px solid ${autoSpeak?T.accent+"44":T.pillBd}`,background:autoSpeak?`${T.accent}14`:T.btnBg,color:autoSpeak?T.accent:T.text,fontSize:14,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>{autoSpeak?"ON":"OFF"}</button>
+      </div>}
+
+      {/* Logout */}
+      <button onClick={onLogout} style={{width:"100%",padding:"14px",borderRadius:16,border:`1.5px solid ${T.pillBd}`,background:T.btnBg,color:T.text,fontSize:16,fontFamily:"inherit",fontWeight:700,cursor:"pointer",marginTop:20,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>🚪 Logout</button>
+
+      {/* Delete Account */}
+      <div style={{marginTop:20,padding:"16px",borderRadius:16,border:"1.5px solid #F43F5E30",background:"#F43F5E08"}}>
+        <div style={{fontSize:15,fontWeight:700,color:"#E11D48",marginBottom:6}}>⚠️ Delete Account</div>
+        <div style={{fontSize:12,color:T.muted,marginBottom:10}}>This permanently deletes your account and all progress. This cannot be undone.</div>
+        {confirmDelete&&<>
+          <PasswordInput value={delPassword} onChange={e=>setDelPassword(e.target.value)} placeholder="Enter password to confirm" T={T} onKeyDown={e=>e.key==="Enter"&&handleDelete()}/>
+          {delError&&<div style={{marginTop:8,fontSize:12,color:"#E11D48"}}>{delError}</div>}
+        </>}
+        <button onClick={handleDelete} disabled={delLoading} style={{width:"100%",padding:"12px",borderRadius:14,border:"none",background:confirmDelete?"#E11D48":"transparent",color:confirmDelete?"#FFF":"#E11D48",fontSize:14,fontFamily:"inherit",fontWeight:700,cursor:delLoading?"wait":"pointer",marginTop:10,opacity:delLoading?.6:1}}>{delLoading?"Deleting...":confirmDelete?"Confirm Delete Forever":"Delete My Account"}</button>
+        {confirmDelete&&<button onClick={()=>{setConfirmDelete(false);setDelError("");setDelPassword("");}} style={{width:"100%",padding:"10px",borderRadius:12,border:"none",background:"transparent",color:T.muted,fontSize:13,fontFamily:"inherit",cursor:"pointer",marginTop:6}}>Cancel</button>}
+      </div>
+    </div>
+  </div>);
+}
+
+// ——— Practice List Panel ———
+function PracticeList({T,title,emoji,color,cardIds,allCards,onSelectCard,onClose}){
+  const items=allCards.filter(c=>cardIds.has(c.id));
+  return(<div style={{position:"fixed",inset:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.4)",padding:20,boxSizing:"border-box"}} onClick={onClose}>
+    <div onClick={e=>e.stopPropagation()} style={{background:T.overlayBg,borderRadius:24,padding:"24px 20px",width:"100%",maxWidth:440,maxHeight:"85vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.3)",backdropFilter:"blur(20px)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <h2 style={{fontSize:22,fontWeight:800,color:T.text,margin:0}}>{emoji} {title} ({items.length})</h2>
+        <button onClick={onClose} style={{width:36,height:36,borderRadius:"50%",border:`1px solid ${T.pillBd}`,background:T.btnBg,color:T.btnTx,cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit"}}>✕</button>
+      </div>
+      {items.length===0?<div style={{textAlign:"center",padding:"40px 0",color:T.muted,fontSize:16}}>No cards here yet. Start studying!</div>
+      :items.map(c=>(<button key={c.id} onClick={()=>onSelectCard(c.id)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",borderRadius:14,border:`1.5px solid ${color}22`,background:`${color}06`,marginBottom:8,cursor:"pointer",textAlign:"left",fontFamily:"inherit",transition:"all .2s"}}>
+        <div><div style={{fontSize:17,fontWeight:700,color:T.text}}>{c.front}</div><div style={{fontSize:14,color,fontWeight:600,marginTop:2}}>{c.back} · {c.tl}</div></div>
+        <div style={{fontSize:12,color:T.muted,flexShrink:0,marginLeft:10}}>{c.cat}</div>
+      </button>))}
+    </div>
+  </div>);
 }
 
 // ——— MAIN APP ———
-export default function App() {
-  const [user, setUser] = useState(null);
-  const [userName, setUserName] = useState("");
-  const [authLoading, setAuthLoading] = useState(true);
-  const [idx, setIdx] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [cat, setCat] = useState("All");
-  const [known, setKnown] = useState(new Set());
-  const [learning, setLearning] = useState(new Set());
-  const [flips, setFlips] = useState(0);
-  const [anim, setAnim] = useState(false);
-  const [dark, setDark] = useState(false);
-  const [autoSpeak, setAutoSpeak] = useState(true);
-  const [saving, setSaving] = useState(false);
+export default function App(){
+  const[user,setUser]=useState(null);const[userName,setUserName]=useState("");const[authLoading,setAuthLoading]=useState(true);
+  const[idx,setIdx]=useState(0);const[flipped,setFlipped]=useState(false);const[cat,setCat]=useState("All");
+  const[known,setKnown]=useState(new Set());const[learning,setLearning]=useState(new Set());
+  const[flips,setFlips]=useState(0);const[anim,setAnim]=useState(false);const[dark,setDark]=useState(false);
+  const[autoSpeak,setAutoSpeak]=useState(true);const[saving,setSaving]=useState(false);
+  const[showSettings,setShowSettings]=useState(false);const[showList,setShowList]=useState(null);// "known"|"learning"|null
+  const[swipeHint,setSwipeHint]=useState(null);// "left"|"right"|null
 
-  const { speak, stop, speaking, activeSpeed, supported } = useSpeech();
-  const T = dark ? DARK : LIGHT;
-  const cards = useMemo(() => cat === "All" ? ALL_CARDS : ALL_CARDS.filter(c => c.cat === cat), [cat]);
-  const card = cards[idx] || cards[0];
-  const color = CC[card?.cat] || "#D87098";
+  const{speak,stop,speaking,activeSpeed,supported}=useSpeech();
+  const T=dark?DARK:LIGHT;
+  const cards=useMemo(()=>cat==="All"?ALL_CARDS:ALL_CARDS.filter(c=>c.cat===cat),[cat]);
+  const card=cards[idx]||cards[0];const color=CC[card?.cat]||"#D87098";
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      if (u) {
-        const progress = await loadProgress(u.uid);
-        setKnown(progress.known);
-        setLearning(progress.learning);
-        setUserName(progress.name);
-      } else {
-        setKnown(new Set()); setLearning(new Set()); setUserName("");
-      }
-      setAuthLoading(false);
-    });
-    return () => unsub();
-  }, []);
+  useEffect(()=>{const unsub=onAuthStateChanged(auth,async u=>{setUser(u);if(u){const p=await loadProgress(u.uid);setKnown(p.known);setLearning(p.learning);setUserName(p.name);}else{setKnown(new Set());setLearning(new Set());setUserName("");}setAuthLoading(false);});return()=>unsub();},[]);
 
-  const saveTimeout = useRef(null);
-  useEffect(() => {
-    if (!user) return;
-    if (saveTimeout.current) clearTimeout(saveTimeout.current);
-    saveTimeout.current = setTimeout(async () => {
-      setSaving(true);
-      await saveProgress(user.uid, known, learning, userName);
-      setSaving(false);
-    }, 800);
-    return () => { if (saveTimeout.current) clearTimeout(saveTimeout.current); };
-  }, [known, learning, user, userName]);
+  const saveTimeout=useRef(null);
+  useEffect(()=>{if(!user)return;if(saveTimeout.current)clearTimeout(saveTimeout.current);saveTimeout.current=setTimeout(async()=>{setSaving(true);await saveProgress(user.uid,known,learning,userName);setSaving(false);},800);return()=>{if(saveTimeout.current)clearTimeout(saveTimeout.current);};},[known,learning,user,userName]);
 
-  const prevFlipped = useRef(false);
-  useEffect(() => {
-    if (flipped && !prevFlipped.current && autoSpeak && supported && card) {
-      setTimeout(() => speak(card.back, 0.82, "normal"), 400);
-    }
-    prevFlipped.current = flipped;
-  }, [flipped, card, autoSpeak, supported, speak]);
+  const prevFlipped=useRef(false);
+  useEffect(()=>{if(flipped&&!prevFlipped.current&&autoSpeak&&supported&&card)setTimeout(()=>speak(card.back,0.82,"normal"),400);prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak]);
 
-  const doFlip = useCallback(() => { if (!anim) { setFlipped(f => !f); setFlips(c => c + 1); } }, [anim]);
-  const nav = useCallback(d => {
-    if (anim) return; setAnim(true); setFlipped(false); stop();
-    setTimeout(() => { setIdx(i => { const n = i + d; return n < 0 ? cards.length - 1 : n >= cards.length ? 0 : n; }); setAnim(false); }, 200);
-  }, [cards.length, anim, stop]);
-  const mark = useCallback(type => {
-    if (!card) return;
-    if (type === "k") { setKnown(s => { const n = new Set(s); n.add(card.id); return n; }); setLearning(s => { const n = new Set(s); n.delete(card.id); return n; }); }
-    else { setLearning(s => { const n = new Set(s); n.add(card.id); return n; }); setKnown(s => { const n = new Set(s); n.delete(card.id); return n; }); }
+  const doFlip=useCallback(()=>{if(!anim){setFlipped(f=>!f);setFlips(c=>c+1);}},[anim]);
+  const nav=useCallback(d=>{if(anim)return;setAnim(true);setFlipped(false);stop();setTimeout(()=>{setIdx(i=>{const n=i+d;return n<0?cards.length-1:n>=cards.length?0:n;});setAnim(false);},200);},[cards.length,anim,stop]);
+
+  const mark=useCallback(type=>{
+    if(!card)return;
+    if(type==="k"){setKnown(s=>{const n=new Set(s);n.add(card.id);return n;});setLearning(s=>{const n=new Set(s);n.delete(card.id);return n;});}
+    else{setLearning(s=>{const n=new Set(s);n.add(card.id);return n;});setKnown(s=>{const n=new Set(s);n.delete(card.id);return n;});}
     nav(1);
-  }, [card, nav]);
+  },[card,nav]);
 
-  const handleLogout = async () => { stop(); await signOut(auth); };
-  const pct = Math.round((known.size / ALL_CARDS.length) * 100);
-  const st = id => known.has(id) ? "k" : learning.has(id) ? "l" : "u";
-  const handlePlay = (e, sp) => { e.stopPropagation(); if (speaking && activeSpeed === sp.key) { stop(); return; } speak(card.back, sp.rate, sp.key); };
-  const displayName = userName || user?.email?.split("@")[0] || "Learner";
+  // Swipe: right=know, left=learning
+  const onSwipeLeft=useCallback(()=>{setSwipeHint("left");setTimeout(()=>setSwipeHint(null),400);mark("l");},[mark]);
+  const onSwipeRight=useCallback(()=>{setSwipeHint("right");setTimeout(()=>setSwipeHint(null),400);mark("k");},[mark]);
+  const swipeHandlers=useSwipe(onSwipeLeft,onSwipeRight);
 
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bgGrad, fontFamily: "'Outfit',sans-serif" }}>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <div style={{ textAlign: "center", color: T.muted }}><div style={{ fontSize: 40, marginBottom: 12 }}>🇮🇳</div><div style={{ fontSize: 18, fontWeight: 600 }}>Loading...</div></div>
-      </div>
-    );
-  }
+  const handleLogout=async()=>{stop();setShowSettings(false);await signOut(auth);};
+  const pct=Math.round((known.size/ALL_CARDS.length)*100);
+  const st=id=>known.has(id)?"k":learning.has(id)?"l":"u";
+  const handlePlay=(e,sp)=>{e.stopPropagation();if(speaking&&activeSpeed===sp.key){stop();return;}speak(card.back,sp.rate,sp.key);};
+  const displayName=userName||user?.email?.split("@")[0]||"Learner";
 
-  if (!user) return <AuthScreen T={T} />;
+  const jumpToCard=(cardId)=>{setCat("All");setFlipped(false);stop();const i=ALL_CARDS.findIndex(c=>c.id===cardId);if(i>=0)setIdx(i);setShowList(null);};
 
-  return (
-    <div style={{ minHeight: "100vh", minWidth: "100vw", background: T.bgGrad, fontFamily: "'Outfit',sans-serif", color: T.text, display: "flex", flexDirection: "column", alignItems: "center", padding: "16px 14px", boxSizing: "border-box", position: "relative", overflow: "hidden", transition: "background .5s", WebkitTextSizeAdjust: "100%" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  if(authLoading)return(<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:T.bgGrad,fontFamily:"'Outfit',sans-serif"}}><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/><div style={{textAlign:"center",color:T.muted}}><div style={{fontSize:40,marginBottom:12}}>🇮🇳</div><div style={{fontSize:18,fontWeight:600}}>Loading...</div></div></div>);
+  if(!user)return<AuthScreen T={T}/>;
+
+  return(
+    <div style={{minHeight:"100vh",minWidth:"100vw",background:T.bgGrad,fontFamily:"'Outfit',sans-serif",color:T.text,display:"flex",flexDirection:"column",alignItems:"center",padding:"16px 14px",boxSizing:"border-box",position:"relative",overflow:"hidden",transition:"background .5s",WebkitTextSizeAdjust:"100%"}}>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
       <style>{`
         @keyframes speakPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
         @keyframes barBounce{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
         @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @keyframes swipeFlashLeft{0%{opacity:0;transform:translateX(20px)}50%{opacity:1}100%{opacity:0;transform:translateX(-20px)}}
+        @keyframes swipeFlashRight{0%{opacity:0;transform:translateX(-20px)}50%{opacity:1}100%{opacity:0;transform:translateX(20px)}}
         .cat-scroll::-webkit-scrollbar{display:none}
         .speed-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
         *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
         html,body{margin:0;padding:0;overflow-x:hidden}
       `}</style>
 
-      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 560 }}>
+      {showSettings&&<SettingsPanel T={T} dark={dark} setDark={setDark} autoSpeak={autoSpeak} setAutoSpeak={setAutoSpeak} supported={supported} onLogout={handleLogout} onDelete={()=>{}} onClose={()=>setShowSettings(false)} displayName={displayName} email={user.email}/>}
+      {showList==="known"&&<PracticeList T={T} title="Mastered" emoji="⭐" color="#5CB87A" cardIds={known} allCards={ALL_CARDS} onSelectCard={jumpToCard} onClose={()=>setShowList(null)}/>}
+      {showList==="learning"&&<PracticeList T={T} title="Learning" emoji="📖" color="#D4A84A" cardIds={learning} allCards={ALL_CARDS} onSelectCard={jumpToCard} onClose={()=>setShowList(null)}/>}
 
+      <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:560}}>
         {/* HEADER */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
           <div>
-            <div style={{ fontSize: 14, letterSpacing: 3, textTransform: "uppercase", color: T.accent, fontWeight: 700, marginBottom: 2, fontFamily: "'Noto Sans Devanagari',sans-serif" }}>हिन्दी सीखें</div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, lineHeight: 1.1, color: T.text }}>Namaste, {displayName}! 👋</h1>
-            <p style={{ fontSize: 14, color: T.sub, margin: "3px 0 0", fontWeight: 400 }}>
-              {saving ? "Saving..." : "✅ Saved"} · {ALL_CARDS.length} words
-            </p>
+            <div style={{fontSize:14,letterSpacing:3,textTransform:"uppercase",color:T.accent,fontWeight:700,marginBottom:2,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी सीखें</div>
+            <h1 style={{fontSize:26,fontWeight:800,margin:0,lineHeight:1.1,color:T.text}}>Namaste, {displayName}! 👋</h1>
+            <p style={{fontSize:13,color:T.sub,margin:"3px 0 0"}}>{saving?"Saving...":"✅ Saved"} · {ALL_CARDS.length} words · Swipe ← → cards</p>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5, alignItems: "flex-end" }}>
-            <div style={{ display: "flex", gap: 5 }}>
-              <button onClick={() => setDark(d => !d)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 11px", borderRadius: 18, background: T.togBg, border: `1px solid ${T.pillBd}`, cursor: "pointer", fontSize: 13, fontFamily: "inherit", color: T.togTx, fontWeight: 600 }}>
-                {dark ? "☀️" : "🌙"}
-              </button>
-              <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 11px", borderRadius: 18, background: T.togBg, border: `1px solid ${T.pillBd}`, cursor: "pointer", fontSize: 12, fontFamily: "inherit", color: "#E11D48", fontWeight: 600 }}>
-                Logout
-              </button>
-            </div>
-            {supported && (
-              <button onClick={() => setAutoSpeak(a => !a)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 16, background: autoSpeak ? `${T.accent}14` : T.togBg, border: `1px solid ${autoSpeak ? T.accent + "30" : T.pillBd}`, cursor: "pointer", fontSize: 11, fontFamily: "inherit", color: autoSpeak ? T.accent : T.muted, fontWeight: 600 }}>
-                🔊 Auto {autoSpeak ? "ON" : "OFF"}
-              </button>
-            )}
-          </div>
+          <button onClick={()=>setShowSettings(true)} style={{width:42,height:42,borderRadius:"50%",border:`1px solid ${T.pillBd}`,background:T.togBg,color:T.togTx,cursor:"pointer",fontSize:20,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit",flexShrink:0}}>⚙️</button>
         </div>
 
         {/* PROGRESS */}
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 15, color: T.sub }}>
-            <span style={{ fontWeight: 500 }}>✨ {known.size} mastered</span><span style={{ fontWeight: 700, color: T.accent }}>{pct}%</span>
+        <div style={{marginBottom:10}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4,fontSize:15,color:T.sub}}>
+            <span style={{fontWeight:500}}>✨ {known.size} mastered</span><span style={{fontWeight:700,color:T.accent}}>{pct}%</span>
           </div>
-          <div style={{ height: 7, borderRadius: 4, background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)", overflow: "hidden" }}>
-            <div style={{ height: "100%", borderRadius: 4, width: `${pct}%`, background: "linear-gradient(90deg, #E8785A, #D4A84A, #5CB87A)", transition: "width .6s cubic-bezier(.22,1,.36,1)", backgroundSize: "200% 100%", animation: "shimmer 3s ease-in-out infinite" }} />
+          <div style={{height:7,borderRadius:4,background:dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.04)",overflow:"hidden"}}>
+            <div style={{height:"100%",borderRadius:4,width:`${pct}%`,background:"linear-gradient(90deg,#E8785A,#D4A84A,#5CB87A)",transition:"width .6s cubic-bezier(.22,1,.36,1)",backgroundSize:"200% 100%",animation:"shimmer 3s ease-in-out infinite"}}/>
           </div>
         </div>
 
         {/* CATEGORIES */}
-        <div className="cat-scroll" style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, marginBottom: 10, scrollbarWidth: "none" }}>
-          {CATEGORIES.map(c => { const active = cat === c; const catCol = CC[c] || T.accent; return (
-            <button key={c} onClick={() => { setCat(c); setIdx(0); setFlipped(false); stop(); }} style={{ padding: "7px 15px", borderRadius: 20, border: "1.5px solid", whiteSpace: "nowrap", flexShrink: 0, borderColor: active ? catCol : T.pillBd, background: active ? `${catCol}18` : T.pillBg, color: active ? catCol : T.sub, fontSize: 15, fontFamily: "inherit", cursor: "pointer", fontWeight: active ? 700 : 400, transition: "all .25s", boxShadow: active ? `0 2px 10px ${catCol}20` : "none" }}>{c}{active ? ` (${cards.length})` : ""}</button>
-          ); })}
+        <div className="cat-scroll" style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:6,marginBottom:10,scrollbarWidth:"none"}}>
+          {CATEGORIES.map(c=>{const active=cat===c;const catCol=CC[c]||T.accent;return(
+            <button key={c} onClick={()=>{setCat(c);setIdx(0);setFlipped(false);stop();}} style={{padding:"7px 15px",borderRadius:20,border:"1.5px solid",whiteSpace:"nowrap",flexShrink:0,borderColor:active?catCol:T.pillBd,background:active?`${catCol}18`:T.pillBg,color:active?catCol:T.sub,fontSize:15,fontFamily:"inherit",cursor:"pointer",fontWeight:active?700:400,transition:"all .25s",boxShadow:active?`0 2px 10px ${catCol}20`:"none"}}>{c}{active?` (${cards.length})`:""}</button>
+          );})}
         </div>
 
         {/* CARD LABEL */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, padding: "0 4px" }}>
-          <span style={{ fontSize: 14, color, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, display: "inline-block" }} />{card?.cat}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,padding:"0 4px"}}>
+          <span style={{fontSize:14,color,fontWeight:700,letterSpacing:1,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5}}>
+            <span style={{width:10,height:10,borderRadius:"50%",background:color,display:"inline-block"}}/>{card?.cat}
           </span>
-          <span style={{ fontSize: 15, color: T.muted, fontWeight: 600, background: dark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", padding: "3px 12px", borderRadius: 10 }}>{idx + 1}/{cards.length}</span>
+          <span style={{fontSize:15,color:T.muted,fontWeight:600,background:dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.03)",padding:"3px 12px",borderRadius:10}}>{idx+1}/{cards.length}</span>
         </div>
 
-        {/* FLASHCARD */}
-        <div onClick={doFlip} style={{ perspective: 1200, cursor: "pointer", marginBottom: 10, height: 460 }}>
-          <div style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "rotateY(0)", transition: "transform .65s cubic-bezier(.23,1,.32,1)" }}>
-            <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", borderRadius: 24, background: T.cardFront, border: `1.5px solid ${color}${dark ? "25" : "15"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "30px 24px", boxShadow: `${T.cardShadow}, 0 0 60px ${color}${dark ? "08" : "04"}`, transition: "all .4s" }}>
-              <div style={{ position: "absolute", top: 16, right: 18, fontSize: 13, color: T.muted, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 600 }}>English</div>
-              {st(card?.id) !== "u" && <div style={{ position: "absolute", top: 16, left: 18, padding: "4px 12px", borderRadius: 10, fontSize: 12, fontWeight: 700, background: st(card?.id) === "k" ? "#5CB87A18" : "#D4A84A18", color: st(card?.id) === "k" ? "#5CB87A" : "#D4A84A" }}>{st(card?.id) === "k" ? "Mastered" : "Learning"}</div>}
-              <div style={{ fontSize: card?.front.length > 20 ? 28 : 46, fontWeight: 800, textAlign: "center", lineHeight: 1.25, color: T.text }}>{card?.front}</div>
-              <div style={{ marginTop: 20, fontSize: 15, color: T.muted, display: "flex", alignItems: "center", gap: 7, background: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)", padding: "8px 16px", borderRadius: 12 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 014-4h14" /><path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 01-4 4H3" /></svg>
-                tap to flip
+        {/* FLASHCARD with swipe */}
+        <div {...swipeHandlers} onClick={doFlip} style={{perspective:1200,cursor:"pointer",marginBottom:10,height:460,position:"relative"}}>
+          {/* Swipe hint overlays */}
+          {swipeHint==="right"&&<div style={{position:"absolute",inset:0,zIndex:10,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:24,background:"rgba(92,184,122,0.15)",animation:"swipeFlashRight .4s ease-out forwards",pointerEvents:"none"}}><span style={{fontSize:40}}>✅</span></div>}
+          {swipeHint==="left"&&<div style={{position:"absolute",inset:0,zIndex:10,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:24,background:"rgba(212,168,74,0.15)",animation:"swipeFlashLeft .4s ease-out forwards",pointerEvents:"none"}}><span style={{fontSize:40}}>🔄</span></div>}
+
+          <div style={{position:"relative",width:"100%",height:"100%",transformStyle:"preserve-3d",transform:flipped?"rotateY(180deg)":"rotateY(0)",transition:"transform .65s cubic-bezier(.23,1,.32,1)"}}>
+            {/* FRONT */}
+            <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",borderRadius:24,background:T.cardFront,border:`1.5px solid ${color}${dark?"25":"15"}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"30px 24px",boxShadow:`${T.cardShadow},0 0 60px ${color}${dark?"08":"04"}`,transition:"all .4s"}}>
+              <div style={{position:"absolute",top:16,right:18,fontSize:13,color:T.muted,letterSpacing:1.5,textTransform:"uppercase",fontWeight:600}}>English</div>
+              {st(card?.id)!=="u"&&<div style={{position:"absolute",top:16,left:18,padding:"4px 12px",borderRadius:10,fontSize:12,fontWeight:700,background:st(card?.id)==="k"?"#5CB87A18":"#D4A84A18",color:st(card?.id)==="k"?"#5CB87A":"#D4A84A"}}>{st(card?.id)==="k"?"Mastered":"Learning"}</div>}
+              <div style={{fontSize:card?.front.length>20?28:46,fontWeight:800,textAlign:"center",lineHeight:1.25,color:T.text}}>{card?.front}</div>
+              <div style={{marginTop:20,fontSize:15,color:T.muted,display:"flex",alignItems:"center",gap:7,background:dark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.02)",padding:"8px 16px",borderRadius:12}}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+                tap to flip · swipe to sort
               </div>
             </div>
-            <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)", borderRadius: 24, background: dark ? `linear-gradient(155deg,${color}12,#1A1520 30%,#161220)` : `linear-gradient(155deg,${color}08,#FFFFFF 30%,#FFFAF5)`, border: `1.5px solid ${color}${dark ? "30" : "18"}`, display: "flex", flexDirection: "column", alignItems: "center", padding: "14px 14px 16px", boxShadow: `${T.cardShadow}, 0 0 60px ${color}${dark ? "10" : "06"}`, transition: "all .4s", overflowY: "auto", justifyContent: "flex-start", paddingTop: 38 }}>
-              <div style={{ position: "absolute", top: 12, right: 16, fontSize: 12, color, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, opacity: .8, fontFamily: "'Noto Sans Devanagari',sans-serif" }}>हिन्दी</div>
-              <div style={{ fontFamily: "'Noto Sans Devanagari',sans-serif", fontSize: card?.back.length > 14 ? 34 : 52, fontWeight: 700, textAlign: "center", color: T.text, lineHeight: 1.3, whiteSpace: "pre-line" }}>{card?.back}</div>
-              <div style={{ marginTop: 2, fontSize: 20, fontWeight: 600, color, letterSpacing: .5 }}>{card?.tl}</div>
-              {supported && (
-                <div onClick={e => e.stopPropagation()} style={{ marginTop: 10, padding: "5px 5px", borderRadius: 16, background: T.speedBg, border: `1px solid ${T.speedBd}`, display: "flex", gap: 4, alignItems: "stretch", width: "100%", maxWidth: 420 }}>
-                  {SPEEDS.map(sp => { const isA = speaking && activeSpeed === sp.key; return (
-                    <button className="speed-btn" key={sp.key} onClick={e => handlePlay(e, sp)} style={{ flex: 1, padding: "8px 4px", borderRadius: 12, border: "1.5px solid", borderColor: isA ? `${color}66` : "transparent", background: isA ? T.speedActive : "transparent", color: isA ? color : T.sub, cursor: "pointer", fontSize: 11, fontFamily: "inherit", fontWeight: 600, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, transition: "all .25s", animation: isA ? "speakPulse 1.2s ease-in-out infinite" : "none" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        {isA ? (<div style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 14 }}>{[0, 1, 2, 3].map(b => (<div key={b} style={{ width: 3, height: 14, borderRadius: 2, background: color, animation: `barBounce 0.${5 + b * 2}s ease-in-out infinite`, animationDelay: `${b * .1}s` }} />))}</div>
-                        ) : (<span style={{ fontSize: 15 }}>{sp.emoji}</span>)}
-                        <span style={{ fontSize: 14, fontWeight: 700 }}>{sp.label}</span>
-                      </div>
-                      <div style={{ fontSize: 10, opacity: .6, fontWeight: 400 }}>{sp.desc}</div>
-                    </button>
-                  ); })}
-                </div>
-              )}
-              <div style={{ marginTop: 8, padding: "6px 14px", borderRadius: 12, background: T.pronBg, border: `1px solid ${T.pronBd}`, fontSize: 15, color, fontWeight: 500, display: "flex", alignItems: "center", gap: 6, textAlign: "center", lineHeight: 1.4, width: "100%", maxWidth: 420, justifyContent: "center" }}>📢 {card?.pron}</div>
-              <div style={{ marginTop: 6, padding: "7px 14px", borderRadius: 12, background: T.trickBg, border: `1px solid ${T.trickBd}`, fontSize: 14, color: T.trickTx, lineHeight: 1.5, textAlign: "center", width: "100%", maxWidth: 420, fontWeight: 500 }}>🇩🇪 {card?.trick}</div>
-              <div style={{ marginTop: 6, padding: "7px 14px", borderRadius: 12, background: T.hintBg, border: `1px solid ${T.hintBd}`, fontSize: 13, color: T.hintTx, lineHeight: 1.5, textAlign: "center", width: "100%", maxWidth: 420, fontWeight: 400 }}>💡 {card?.hint}</div>
+            {/* BACK */}
+            <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)",borderRadius:24,background:dark?`linear-gradient(155deg,${color}12,#1A1520 30%,#161220)`:`linear-gradient(155deg,${color}08,#FFFFFF 30%,#FFFAF5)`,border:`1.5px solid ${color}${dark?"30":"18"}`,display:"flex",flexDirection:"column",alignItems:"center",padding:"14px 14px 16px",boxShadow:`${T.cardShadow},0 0 60px ${color}${dark?"10":"06"}`,transition:"all .4s",overflowY:"auto",justifyContent:"flex-start",paddingTop:38}}>
+              <div style={{position:"absolute",top:12,right:16,fontSize:12,color,letterSpacing:1.5,textTransform:"uppercase",fontWeight:700,opacity:.8,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी</div>
+              <div style={{fontFamily:"'Noto Sans Devanagari',sans-serif",fontSize:card?.back.length>14?34:52,fontWeight:700,textAlign:"center",color:T.text,lineHeight:1.3,whiteSpace:"pre-line"}}>{card?.back}</div>
+              <div style={{marginTop:2,fontSize:20,fontWeight:600,color,letterSpacing:.5}}>{card?.tl}</div>
+              {/* SPEED */}
+              {supported&&(<div onClick={e=>e.stopPropagation()} style={{marginTop:10,padding:"5px 5px",borderRadius:16,background:T.speedBg,border:`1px solid ${T.speedBd}`,display:"flex",gap:4,alignItems:"stretch",width:"100%",maxWidth:420}}>
+                {SPEEDS.map(sp=>{const isA=speaking&&activeSpeed===sp.key;return(
+                  <button className="speed-btn" key={sp.key} onClick={e=>handlePlay(e,sp)} style={{flex:1,padding:"8px 4px",borderRadius:12,border:"1.5px solid",borderColor:isA?`${color}66`:"transparent",background:isA?T.speedActive:"transparent",color:isA?color:T.sub,cursor:"pointer",fontSize:11,fontFamily:"inherit",fontWeight:600,display:"flex",flexDirection:"column",alignItems:"center",gap:2,transition:"all .25s",animation:isA?"speakPulse 1.2s ease-in-out infinite":"none"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:4}}>
+                      {isA?(<div style={{display:"flex",gap:2,alignItems:"flex-end",height:14}}>{[0,1,2,3].map(b=>(<div key={b} style={{width:3,height:14,borderRadius:2,background:color,animation:`barBounce 0.${5+b*2}s ease-in-out infinite`,animationDelay:`${b*.1}s`}}/>))}</div>
+                      ):(<span style={{fontSize:15}}>{sp.emoji}</span>)}
+                      <span style={{fontSize:14,fontWeight:700}}>{sp.label}</span>
+                    </div>
+                    <div style={{fontSize:10,opacity:.6,fontWeight:400}}>{sp.desc}</div>
+                  </button>
+                );})}
+              </div>)}
+              <div style={{marginTop:8,padding:"6px 14px",borderRadius:12,background:T.pronBg,border:`1px solid ${T.pronBd}`,fontSize:15,color,fontWeight:500,display:"flex",alignItems:"center",gap:6,textAlign:"center",lineHeight:1.4,width:"100%",maxWidth:420,justifyContent:"center"}}>📢 {card?.pron}</div>
+              <div style={{marginTop:6,padding:"7px 14px",borderRadius:12,background:T.trickBg,border:`1px solid ${T.trickBd}`,fontSize:14,color:T.trickTx,lineHeight:1.5,textAlign:"center",width:"100%",maxWidth:420,fontWeight:500}}>🇩🇪 {card?.trick}</div>
+              <div style={{marginTop:6,padding:"7px 14px",borderRadius:12,background:T.hintBg,border:`1px solid ${T.hintBd}`,fontSize:13,color:T.hintTx,lineHeight:1.5,textAlign:"center",width:"100%",maxWidth:420,fontWeight:400}}>💡 {card?.hint}</div>
             </div>
           </div>
         </div>
 
         {/* CONTROLS */}
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center", marginBottom: 10 }}>
-          <button onClick={() => nav(-1)} style={{ width: 50, height: 50, borderRadius: "50%", border: `1px solid ${T.btnBd}`, background: T.btnBg, color: T.btnTx, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontFamily: "inherit" }}>‹</button>
-          <button onClick={() => mark("l")} style={{ padding: "12px 22px", borderRadius: 18, border: "1.5px solid #D4A84A44", background: "#D4A84A10", color: "#D4A84A", cursor: "pointer", fontSize: 16, fontFamily: "inherit", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>🔄 Learning</button>
-          <button onClick={() => mark("k")} style={{ padding: "12px 22px", borderRadius: 18, border: "1.5px solid #5CB87A44", background: "#5CB87A10", color: "#5CB87A", cursor: "pointer", fontSize: 16, fontFamily: "inherit", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>✅ Know it</button>
-          <button onClick={() => nav(1)} style={{ width: 50, height: 50, borderRadius: "50%", border: `1px solid ${T.btnBd}`, background: T.btnBg, color: T.btnTx, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontFamily: "inherit" }}>›</button>
+        <div style={{display:"flex",gap:8,justifyContent:"center",alignItems:"center",marginBottom:10}}>
+          <button onClick={()=>nav(-1)} style={{width:50,height:50,borderRadius:"50%",border:`1px solid ${T.btnBd}`,background:T.btnBg,color:T.btnTx,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontFamily:"inherit"}}>‹</button>
+          <button onClick={()=>mark("l")} style={{padding:"12px 22px",borderRadius:18,border:"1.5px solid #D4A84A44",background:"#D4A84A10",color:"#D4A84A",cursor:"pointer",fontSize:16,fontFamily:"inherit",fontWeight:700,display:"flex",alignItems:"center",gap:6}}>← Learning</button>
+          <button onClick={()=>mark("k")} style={{padding:"12px 22px",borderRadius:18,border:"1.5px solid #5CB87A44",background:"#5CB87A10",color:"#5CB87A",cursor:"pointer",fontSize:16,fontFamily:"inherit",fontWeight:700,display:"flex",alignItems:"center",gap:6}}>Know it →</button>
+          <button onClick={()=>nav(1)} style={{width:50,height:50,borderRadius:"50%",border:`1px solid ${T.btnBd}`,background:T.btnBg,color:T.btnTx,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontFamily:"inherit"}}>›</button>
         </div>
 
         {/* DOTS */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 4, flexWrap: "wrap", marginBottom: 12, padding: "0 2px" }}>
-          {cards.map((c, i) => { const s = st(c.id); return (
-            <button key={c.id} onClick={() => { setIdx(i); setFlipped(false); stop(); }} style={{ width: i === idx ? 20 : 8, height: 8, borderRadius: 4, border: "none", padding: 0, cursor: "pointer", transition: "all .3s cubic-bezier(.22,1,.36,1)", background: i === idx ? color : s === "k" ? "#5CB87A55" : s === "l" ? "#D4A84A55" : T.dotBg }} />
-          ); })}
+        <div style={{display:"flex",justifyContent:"center",gap:4,flexWrap:"wrap",marginBottom:12,padding:"0 2px"}}>
+          {cards.map((c,i)=>{const s=st(c.id);return(
+            <button key={c.id} onClick={()=>{setIdx(i);setFlipped(false);stop();}} style={{width:i===idx?20:8,height:8,borderRadius:4,border:"none",padding:0,cursor:"pointer",transition:"all .3s cubic-bezier(.22,1,.36,1)",background:i===idx?color:s==="k"?"#5CB87A55":s==="l"?"#D4A84A55":T.dotBg}}/>
+          );})}
         </div>
 
-        {/* STATS */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, padding: "12px 4px", borderTop: `1px solid ${T.divider}` }}>
-          {[{ l: "Total", v: ALL_CARDS.length, c: T.sub, e: "📚" }, { l: "Mastered", v: known.size, c: "#5CB87A", e: "⭐" }, { l: "Learning", v: learning.size, c: "#D4A84A", e: "📖" }, { l: "Flips", v: flips, c: "#E8785A", e: "🔄" }].map(s => (
-            <div key={s.l} style={{ textAlign: "center", padding: "8px 4px", borderRadius: 14, background: dark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)" }}>
-              <div style={{ fontSize: 12, marginBottom: 2 }}>{s.e}</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: s.c }}>{s.v}</div>
-              <div style={{ fontSize: 12, color: T.muted, letterSpacing: .5, marginTop: 1, textTransform: "uppercase", fontWeight: 600 }}>{s.l}</div>
+        {/* STATS — clickable */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,padding:"12px 4px",borderTop:`1px solid ${T.divider}`}}>
+          {[
+            {l:"Total",v:ALL_CARDS.length,c:T.sub,e:"📚",click:null},
+            {l:"Mastered",v:known.size,c:"#5CB87A",e:"⭐",click:()=>setShowList("known")},
+            {l:"Learning",v:learning.size,c:"#D4A84A",e:"📖",click:()=>setShowList("learning")},
+            {l:"Flips",v:flips,c:"#E8785A",e:"🔄",click:null},
+          ].map(s=>(
+            <div key={s.l} onClick={s.click} style={{textAlign:"center",padding:"8px 4px",borderRadius:14,background:dark?"rgba(255,255,255,0.02)":"rgba(0,0,0,0.015)",cursor:s.click?"pointer":"default",transition:"all .2s",border:s.click?`1.5px solid ${s.c}22`:"1.5px solid transparent"}}>
+              <div style={{fontSize:12,marginBottom:2}}>{s.e}</div>
+              <div style={{fontSize:24,fontWeight:800,color:s.c}}>{s.v}</div>
+              <div style={{fontSize:12,color:T.muted,letterSpacing:.5,marginTop:1,textTransform:"uppercase",fontWeight:600}}>{s.l}</div>
+              {s.click&&<div style={{fontSize:9,color:s.c,marginTop:2,fontWeight:600}}>TAP TO VIEW</div>}
             </div>
           ))}
         </div>
