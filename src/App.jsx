@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { auth, db } from "./firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
@@ -209,7 +210,8 @@ export default function App(){
         </div>}
       </div>
 
-      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:50,background:T.tabBg,borderTop:`1px solid ${T.tabBd}`,display:"flex",justifyContent:"center",backdropFilter:"blur(16px)"}}><div style={{display:"flex",maxWidth:560,width:"100%"}}>{[{k:"practice",i:"📚",l:u.practice},{k:"progress",i:"📊",l:u.progress},{k:"settings",i:"⚙️",l:u.settings}].map(t=>(<button key={t.k} onClick={()=>{setTab(t.k);if(t.k==="practice"&&!inCardView){setActiveCategory(null);setPracticeMode(null);}stop();}} style={{flex:1,padding:"10px 0 8px",border:"none",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,fontFamily:"inherit",color:tab===t.k?T.accent:T.muted}}><span style={{fontSize:22}}>{t.i}</span><span style={{fontSize:11,fontWeight:tab===t.k?700:500}}>{t.l}</span>{tab===t.k&&<div style={{width:20,height:3,borderRadius:2,background:T.accent}}/>}</button>))}</div></div>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:50,background:T.tabBg,borderTop:`1px solid ${T.tabBd}`,display:"flex",justifyContent:"center",backdropFilter:"blur(16px)"}}><div style={{display:"flex",maxWidth:560,width:"100%"}}>{[{k:"practice",i:"📚",l:u.practice},{k:"progress",i:"��",l:u.progress},{k:"settings",i:"⚙️",l:u.settings}].map(t=>(<button key={t.k} onClick={()=>{setTab(t.k);if(t.k==="practice"&&!inCardView){setActiveCategory(null);setPracticeMode(null);}stop();}} style={{flex:1,padding:"10px 0 8px",border:"none",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,fontFamily:"inherit",color:tab===t.k?T.accent:T.muted}}><span style={{fontSize:22}}>{t.i}</span><span style={{fontSize:11,fontWeight:tab===t.k?700:500}}>{t.l}</span>{tab===t.k&&<div style={{width:20,height:3,borderRadius:2,background:T.accent}}/>}</button>))}</div></div>
+      <Analytics />
     </div>
   );
 }
