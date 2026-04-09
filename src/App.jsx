@@ -12,13 +12,28 @@ const CATEGORIES=["All",...Array.from(new Set(ALL_CARDS.map(c=>c.cat)))];
 const CC={Numbers:"#E07850","Family & People":"#A070C0","Body Parts":"#D86888","Nature & Weather":"#50A8B8",Colors:"#C8A040","Food & Home":"#58B070",Places:"#5890D0",Time:"#D89050",Emotions:"#C86088",Adjectives:"#50A080",Verbs:"#8870B8","Common Words":"#6878C0",Sentences:"#D08058"};
 const LVL_C=["#D06060","#D89050","#C8A040","#80B050","#40A050"];
 const LVL_D=[0,48*36e5,96*36e5,7*864e5,30*864e5];
-function cleanForSpeech(t){return t.replace(/\s*\(.*?\)\s*/g," ").replace(/\s*\/\s*/g," ").replace(/\n/g," ").trim();}
+function cleanForSpeech(t){return t.replace(/\s*\(.*?\)\s*/g," ").replace(/\n/g," ").trim();}
 
 const TL={bgGrad:"linear-gradient(155deg,#F8F6F3 0%,#F2EDE8 30%,#ECE8F2 55%,#E8F0F0 75%,#F5F2EA 100%)",cardFront:"linear-gradient(155deg,#FFF,#FDFBF8 40%,#F8F6FD 70%,#F5F8FB)",text:"#1E1A20",sub:"#58505E",muted:"#908898",faint:"#C8C0D0",hintBg:"rgba(160,112,192,.06)",hintBd:"rgba(160,112,192,.15)",hintTx:"#5E4878",trickBg:"rgba(88,176,112,.06)",trickBd:"rgba(88,176,112,.16)",trickTx:"#38784A",pillBg:"#FFF",pillBd:"rgba(0,0,0,.06)",btnBg:"#FFF",btnBd:"rgba(0,0,0,.08)",btnTx:"#78708A",dotBg:"rgba(0,0,0,.07)",divider:"rgba(0,0,0,.06)",cardShadow:"0 8px 32px rgba(30,20,40,.06),0 2px 8px rgba(0,0,0,.03)",accent:"#C06080",pronBg:"rgba(192,96,128,.06)",pronBd:"rgba(192,96,128,.16)",speedBg:"rgba(192,96,128,.04)",speedBd:"rgba(192,96,128,.10)",speedActive:"rgba(192,96,128,.12)",inputBg:"#FFF",inputBd:"rgba(0,0,0,.10)",overlayBg:"rgba(248,246,243,.98)",tabBg:"#FFF",tabBd:"rgba(0,0,0,.06)",barFill:"#C06080",exBg:"rgba(80,168,184,.05)",exBd:"rgba(80,168,184,.14)",exTx:"#28708A",catCardBg:"#FFF",catCardBd:"rgba(0,0,0,.05)",catCardShadow:"0 2px 12px rgba(0,0,0,.04)"};
 const TD={bgGrad:"linear-gradient(155deg,#14101A 0%,#181420 30%,#121418 55%,#161218 75%,#181418 100%)",cardFront:"linear-gradient(155deg,#201828,#1A1620 40%,#161420)",text:"#EDE8F0",sub:"#8A8098",muted:"#585060",faint:"#383040",hintBg:"rgba(255,255,255,.04)",hintBd:"rgba(255,255,255,.08)",hintTx:"#8A8098",trickBg:"rgba(88,176,112,.08)",trickBd:"rgba(88,176,112,.14)",trickTx:"#78C098",pillBg:"rgba(255,255,255,.04)",pillBd:"rgba(255,255,255,.06)",btnBg:"rgba(255,255,255,.05)",btnBd:"rgba(255,255,255,.08)",btnTx:"#8A8098",dotBg:"rgba(255,255,255,.08)",divider:"rgba(255,255,255,.05)",cardShadow:"0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.03)",accent:"#E08898",pronBg:"rgba(224,136,152,.10)",pronBd:"rgba(224,136,152,.20)",speedBg:"rgba(255,255,255,.03)",speedBd:"rgba(255,255,255,.06)",speedActive:"rgba(224,136,152,.14)",inputBg:"rgba(255,255,255,.06)",inputBd:"rgba(255,255,255,.10)",overlayBg:"rgba(20,16,26,.98)",tabBg:"#1A1620",tabBd:"rgba(255,255,255,.06)",barFill:"#E08898",exBg:"rgba(80,168,184,.08)",exBd:"rgba(80,168,184,.12)",exTx:"#78C0D0",catCardBg:"rgba(255,255,255,.04)",catCardBd:"rgba(255,255,255,.06)",catCardShadow:"0 2px 12px rgba(0,0,0,.2)"};
 const SPEEDS=[{key:"normal",label:"Normal",rate:.82,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.15,emoji:"🐢"}];
 
-function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);const[v,sv]=useState(null);const r=useRef(null);useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;const p=()=>{const vs=r.current.getVoices();sv(vs.find(x=>x.lang==="hi-IN")||vs.find(x=>x.lang.startsWith("hi"))||null);};p();r.current.addEventListener("voiceschanged",p);return()=>r.current?.removeEventListener("voiceschanged",p);},[]);const speak=useCallback((t,rate=.82,k="normal")=>{if(!r.current)return;r.current.cancel();const u=new SpeechSynthesisUtterance(cleanForSpeech(t));u.lang="hi-IN";u.rate=rate;u.pitch=1;if(v)u.voice=v;u.onstart=()=>{ss(true);sa(k);};u.onend=()=>{ss(false);sa(null);};u.onerror=()=>{ss(false);sa(null);};r.current.speak(u);},[v]);const stop=useCallback(()=>{r.current?.cancel();ss(false);sa(null);},[]);return{speak,stop,speaking:s,activeSpeed:a,supported:typeof window!=="undefined"&&!!window.speechSynthesis};}
+function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);const[v,sv]=useState(null);const r=useRef(null);useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;const p=()=>{const vs=r.current.getVoices();sv(vs.find(x=>x.lang==="hi-IN")||vs.find(x=>x.lang.startsWith("hi"))||null);};p();r.current.addEventListener("voiceschanged",p);return()=>r.current?.removeEventListener("voiceschanged",p);},[]);
+  // speakParts: split on "/" and speak each part with a pause
+  const speak=useCallback((t,rate=.82,k="normal")=>{if(!r.current)return;r.current.cancel();
+    const cleaned=cleanForSpeech(t);
+    const parts=cleaned.split(/\s*\/\s*/).filter(Boolean);
+    const speakPart=(i)=>{
+      if(i>=parts.length){ss(false);sa(null);return;}
+      const u=new SpeechSynthesisUtterance(parts[i].trim());
+      u.lang="hi-IN";u.rate=rate;u.pitch=1;if(v)u.voice=v;
+      u.onstart=()=>{ss(true);sa(k);};
+      u.onend=()=>{if(i<parts.length-1){setTimeout(()=>speakPart(i+1),450);}else{ss(false);sa(null);}};
+      u.onerror=()=>{ss(false);sa(null);};
+      r.current.speak(u);
+    };
+    speakPart(0);
+  },[v]);const stop=useCallback(()=>{r.current?.cancel();ss(false);sa(null);},[]);return{speak,stop,speaking:s,activeSpeed:a,supported:typeof window!=="undefined"&&!!window.speechSynthesis};}
 function useSwipe(onL,onR){const sx=useRef(0);const sy=useRef(0);return{onTouchStart:useCallback(e=>{sx.current=e.touches[0].clientX;sy.current=e.touches[0].clientY;},[]),onTouchEnd:useCallback(e=>{const dx=e.changedTouches[0].clientX-sx.current;const dy=e.changedTouches[0].clientY-sy.current;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){dx>0?onR():onL();}},[onL,onR])};}
 
 async function saveData(uid,d){try{await setDoc(doc(db,"users",uid),{...d,updatedAt:new Date().toISOString()},{merge:true});}catch(e){console.error(e);}}
@@ -64,7 +79,13 @@ export default function App(){
   const[showTutorial,setShowTutorial]=useState(false);const[lang,setLang]=useState("en");
   const[shuffled,setShuffled]=useState(false);const[shuffledCards,setShuffledCards]=useState([]);
   const[showNamaste,setShowNamaste]=useState(false);
+  // New toggle states for card back info panels
+  const[showLatin,setShowLatin]=useState(false);
+  const[showGender,setShowGender]=useState(false);
+  const[showPlural,setShowPlural]=useState(false);
   const lastActivity=useRef(Date.now());const sessionStart=useRef(Date.now());
+  // Ref for tracking marked card to fix Due stuck bug
+  const lastMarkedId=useRef(null);
 
   const{speak,stop,speaking,activeSpeed,supported}=useSpeech();
   const T=dark?TD:TL;const u=UI[lang]||UI.en;const today=new Date().toISOString().slice(0,10);
@@ -93,6 +114,24 @@ export default function App(){
   // Clamp idx when filtered list shrinks (prevents skip bug)
   useEffect(()=>{if(cards.length>0&&idx>=cards.length)setIdx(Math.max(0,cards.length-1));},[cards.length,idx]);
 
+  // FIX: After marking a card in practiceMode, if the same card is still showing, advance
+  useEffect(()=>{
+    if(practiceMode&&lastMarkedId.current!==null&&cards.length>0){
+      const currentCard=cards[idx]||cards[0];
+      if(currentCard&&currentCard.id===lastMarkedId.current){
+        // Card is still in the list after marking — advance
+        lastMarkedId.current=null;
+        setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);
+        setIdx(i=>{const n=i+1;return n>=cards.length?0:n;});
+      } else {
+        lastMarkedId.current=null;
+      }
+    }
+  },[cardLevels,practiceMode,cards,idx]);
+
+  // Reset info toggles when card changes
+  useEffect(()=>{setShowLatin(false);setShowGender(false);setShowPlural(false);},[idx]);
+
   useEffect(()=>{const unsub=onAuthStateChanged(auth,async usr=>{setUser(usr);if(usr){const d=await loadData(usr.uid);if(d){setCardLevels(d.cardLevels||{});setUserName(d.name||"");setStats(d.stats||{totalMinutes:0,dailyLog:{},dailyTarget:25});setTodayFlips(d.stats?.dailyLog?.[today]||0);setLang(d.lang||"en");if(d.showTutorial)setShowTutorial(true);}setShowNamaste(true);}setAuthLoading(false);});return()=>unsub();},[]);
 
   useEffect(()=>{if(!user)return;const iv=setInterval(()=>{if(Date.now()-lastActivity.current<60000){const el=(Date.now()-sessionStart.current)/60000;if(el>0&&el<2)setStats(p=>({...p,totalMinutes:(p.totalMinutes||0)+el}));}sessionStart.current=Date.now();},30000);return()=>clearInterval(iv);},[user]);
@@ -104,11 +143,11 @@ export default function App(){
   useEffect(()=>{if(flipped&&!prevFlipped.current){setTodayFlips(f=>f+1);setStats(p=>({...p,dailyLog:{...p.dailyLog,[today]:(p.dailyLog?.[today]||0)+1}}));if(autoSpeak&&supported&&card)setTimeout(()=>speak(card.back,.82,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,today]);
 
   const doFlip=useCallback(()=>{if(!anim){setFlipped(f=>!f);setShowHint(false);markActive();}},[anim,markActive]);
-  const nav=useCallback(d=>{if(anim)return;setAnim(true);setFlipped(false);setShowHint(false);stop();markActive();setTimeout(()=>{setIdx(i=>{const n=i+d;return n<0?cards.length-1:n>=cards.length?0:n;});setAnim(false);},200);},[cards.length,anim,stop,markActive]);
+  const nav=useCallback(d=>{if(anim)return;setAnim(true);setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();markActive();setTimeout(()=>{setIdx(i=>{const n=i+d;return n<0?cards.length-1:n>=cards.length?0:n;});setAnim(false);},200);},[cards.length,anim,stop,markActive]);
 
-  // SKIP BUG FIX: In filtered modes, don't nav(1) — the filtered list shrinks automatically
-  const markKnow=useCallback(()=>{if(!card)return;markActive();setCardLevels(p=>lvlUp(p,card.id));if(practiceMode){setFlipped(false);setShowHint(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop]);
-  const markLearn=useCallback(()=>{if(!card)return;markActive();setCardLevels(p=>lvlDown(p,card.id));if(practiceMode){setFlipped(false);setShowHint(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop]);
+  // DUE BUG FIX: track marked card id so useEffect can advance if card stays in list
+  const markKnow=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlUp(p,card.id));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop]);
+  const markLearn=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlDown(p,card.id));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop]);
 
   const onSwipeL=useCallback(()=>{setSwipeHint("left");setTimeout(()=>setSwipeHint(null),400);markLearn();},[markLearn]);
   const onSwipeR=useCallback(()=>{setSwipeHint("right");setTimeout(()=>setSwipeHint(null),400);markKnow();},[markKnow]);
@@ -127,6 +166,21 @@ export default function App(){
   const speakEx=e=>{e.stopPropagation();markActive();if(card?.example)speak(card.example.hi,.2,"normal");};
   const closeTutorial=()=>{setShowTutorial(false);if(user)saveData(user.uid,{showTutorial:false});};
   const inCardView=activeCategory!==null||practiceMode;
+
+  // Helper: does this card have gender/plural/genderForms info?
+  const hasGenderInfo=card&&(card.gender||card.gf);
+  const hasPluralInfo=card&&card.plural;
+  const hasLatinInfo=card&&card.tl;
+
+  // Toggle button style helper
+  const toggleBtnStyle=(active)=>({
+    padding:"5px 10px",borderRadius:10,
+    border:`1.5px solid ${active?color+"60":T.pillBd}`,
+    background:active?`${color}14`:T.speedBg,
+    color:active?color:T.sub,
+    cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:600,
+    display:"flex",alignItems:"center",gap:3
+  });
 
   if(authLoading)return(<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:T.bgGrad,fontFamily:"'Outfit',sans-serif"}}><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/><div style={{textAlign:"center",color:T.muted}}><div style={{fontSize:40,marginBottom:12}}>🇮🇳</div><div style={{fontSize:18,fontWeight:600}}>Loading...</div></div></div>);
   if(!user)return<AuthScreen T={T}/>;
@@ -166,19 +220,40 @@ export default function App(){
               {swipeHint==="right"&&<div style={{position:"absolute",inset:0,zIndex:10,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:24,background:"rgba(64,160,80,.12)",animation:"swR .4s ease-out forwards",pointerEvents:"none"}}><span style={{fontSize:44}}>✅</span></div>}
               {swipeHint==="left"&&<div style={{position:"absolute",inset:0,zIndex:10,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:24,background:"rgba(200,160,64,.12)",animation:"swL .4s ease-out forwards",pointerEvents:"none"}}><span style={{fontSize:44}}>🔄</span></div>}
               <div style={{position:"relative",width:"100%",height:"100%",transformStyle:"preserve-3d",transform:flipped?"rotateY(180deg)":"rotateY(0)",transition:"transform .65s cubic-bezier(.23,1,.32,1)"}}>
+                {/* ——— FRONT SIDE ——— */}
                 <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",borderRadius:24,background:T.cardFront,border:`1px solid ${color}18`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"28px 22px",boxShadow:T.cardShadow}}>
                   <div style={{position:"absolute",top:14,right:16,fontSize:12,color:T.muted,letterSpacing:1.5,textTransform:"uppercase",fontWeight:600}}>{lang==="de"?"Deutsch":"English"}</div>
                   <div style={{fontSize:cardFront&&cardFront.length>20?26:42,fontWeight:800,textAlign:"center",lineHeight:1.25,color:T.text}}>{cardFront}</div>
                   <div style={{marginTop:14,width:"100%",maxWidth:360,textAlign:"center"}}>{!showHint?<button onClick={e=>{e.stopPropagation();setShowHint(true);markActive();}} style={{padding:"8px 18px",borderRadius:14,border:`1.5px solid ${T.hintBd}`,background:T.hintBg,color:T.hintTx,fontSize:14,fontFamily:"inherit",fontWeight:600,cursor:"pointer",margin:"0 auto",display:"flex",alignItems:"center",gap:6}}>💡 {u.hint}</button>:<div style={{animation:"hintIn .3s ease-out",padding:"10px 16px",borderRadius:14,background:T.hintBg,border:`1.5px solid ${T.hintBd}`,fontSize:14,color:T.hintTx,lineHeight:1.5,fontWeight:500}} onClick={e=>e.stopPropagation()}>{cardHint}</div>}</div>
                   <div style={{marginTop:14,fontSize:13,color:T.faint}}>{u.flipHint}</div>
                 </div>
+                {/* ——— BACK SIDE ——— */}
                 <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)",borderRadius:24,background:dark?`linear-gradient(155deg,${color}10,#1A1620 25%,#161420)`:`linear-gradient(155deg,${color}06,#FFF 25%,#F8F6F3)`,border:`1px solid ${color}${dark?"28":"14"}`,display:"flex",flexDirection:"column",alignItems:"center",padding:"12px 14px",boxShadow:T.cardShadow,overflowY:"auto",justifyContent:"flex-start",paddingTop:32}}>
                   <div style={{position:"absolute",top:10,right:14,fontSize:11,color,letterSpacing:1.5,textTransform:"uppercase",fontWeight:700,opacity:.7,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी</div>
+                  {/* Hindi word */}
                   <div style={{fontFamily:"'Noto Sans Devanagari',sans-serif",fontSize:card?.back.length>14?28:46,fontWeight:700,textAlign:"center",color:T.text,lineHeight:1.3,whiteSpace:"pre-line"}}>{card?.back}</div>
-                  <div style={{marginTop:2,fontSize:17,fontWeight:600,color}}>{card?.tl}</div>
+                  {/* Audio controls */}
                   {supported&&<div onClick={e=>e.stopPropagation()} style={{marginTop:8,padding:"4px",borderRadius:14,background:T.speedBg,border:`1px solid ${T.speedBd}`,display:"flex",gap:4,width:"100%",maxWidth:400}}>{SPEEDS.map(sp=>{const isA=speaking&&activeSpeed===sp.key;return(<button key={sp.key} onClick={e=>handlePlay(e,sp)} style={{flex:1,padding:"8px",borderRadius:10,border:"1.5px solid",borderColor:isA?`${color}60`:"transparent",background:isA?T.speedActive:"transparent",color:isA?color:T.sub,cursor:"pointer",fontSize:14,fontFamily:"inherit",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:4,animation:isA?"speakPulse 1.2s ease-in-out infinite":"none"}}>{isA?<div style={{display:"flex",gap:2,height:14}}>{[0,1,2,3].map(b=><div key={b} style={{width:3,height:14,borderRadius:2,background:color,animation:`barBounce 0.${5+b*2}s ease-in-out infinite`,animationDelay:`${b*.1}s`}}/>)}</div>:<span>{sp.emoji}</span>}{sp.label}</button>);})}</div>}
-                  <div style={{marginTop:6,padding:"5px 12px",borderRadius:10,background:T.pronBg,border:`1px solid ${T.pronBd}`,fontSize:14,color,fontWeight:500,width:"100%",maxWidth:400,textAlign:"center"}}>📢 {card?.pron}</div>
+                  {/* ——— Toggle buttons row: Latin / Gender / Plural ——— */}
+                  <div onClick={e=>e.stopPropagation()} style={{display:"flex",gap:5,marginTop:6,flexWrap:"wrap",justifyContent:"center"}}>
+                    {hasLatinInfo&&<button onClick={()=>setShowLatin(v=>!v)} style={toggleBtnStyle(showLatin)}>🔤 {lang==="de"?"Latein":"Latin"}</button>}
+                    {hasGenderInfo&&<button onClick={()=>setShowGender(v=>!v)} style={toggleBtnStyle(showGender)}>♂♀ {lang==="de"?"Geschlecht":"Gender"}</button>}
+                    {hasPluralInfo&&<button onClick={()=>setShowPlural(v=>!v)} style={toggleBtnStyle(showPlural)}>1⇄2 {lang==="de"?"Singular/Plural":"Singular/Plural"}</button>}
+                  </div>
+                  {/* Latin transliteration (collapsible) */}
+                  {showLatin&&hasLatinInfo&&<div style={{marginTop:5,padding:"5px 12px",borderRadius:10,background:T.pronBg,border:`1px solid ${T.pronBd}`,fontSize:14,color,fontWeight:500,width:"100%",maxWidth:400,textAlign:"center",animation:"hintIn .3s ease-out"}}>🔤 {card.tl}</div>}
+                  {/* Gender info (collapsible) */}
+                  {showGender&&hasGenderInfo&&<div style={{marginTop:5,padding:"5px 12px",borderRadius:10,background:T.pronBg,border:`1px solid ${T.pronBd}`,fontSize:13,color,fontWeight:500,width:"100%",maxWidth:400,textAlign:"center",animation:"hintIn .3s ease-out",lineHeight:1.5}}>
+                    {card.gender&&<span>♂♀ {card.gender==="m"?(lang==="de"?"Maskulin (पुल्लिंग)":"Masculine (पुल्लिंग)"):(lang==="de"?"Feminin (स्त्रीलिंग)":"Feminine (स्त्रीलिंग)")}</span>}
+                    {card.gf&&<span>{card.gender?" · ":""}✨ {card.gf}</span>}
+                  </div>}
+                  {/* Plural info (collapsible) */}
+                  {showPlural&&hasPluralInfo&&<div style={{marginTop:5,padding:"5px 12px",borderRadius:10,background:T.pronBg,border:`1px solid ${T.pronBd}`,fontSize:13,color,fontWeight:500,width:"100%",maxWidth:400,textAlign:"center",animation:"hintIn .3s ease-out",lineHeight:1.5}}>
+                    <span style={{fontFamily:"'Noto Sans Devanagari',sans-serif"}}>1⇄2 {lang==="de"?"Einzahl":"Singular"}: {card.back} → {lang==="de"?"Mehrzahl":"Plural"}: {card.plural}</span>
+                  </div>}
+                  {/* German memory trick */}
                   <div style={{marginTop:5,padding:"6px 12px",borderRadius:10,background:T.trickBg,border:`1px solid ${T.trickBd}`,fontSize:13,color:T.trickTx,lineHeight:1.5,textAlign:"center",width:"100%",maxWidth:400,fontWeight:500}}>🇩🇪 {card?.trick}</div>
+                  {/* Example sentence */}
                   {card?.example&&<div onClick={e=>e.stopPropagation()} style={{marginTop:5,padding:"8px 12px",borderRadius:10,background:T.exBg,border:`1px solid ${T.exBd}`,width:"100%",maxWidth:400}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:T.exTx}}>{u.example}</span>{supported&&<button onClick={speakEx} style={{padding:"3px 8px",borderRadius:8,border:`1px solid ${T.exBd}`,background:"transparent",color:T.exTx,fontSize:11,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>{u.play}</button>}</div><div style={{fontFamily:"'Noto Sans Devanagari',sans-serif",fontSize:15,fontWeight:600,color:T.text,lineHeight:1.4}}>{card.example.hi}</div><div style={{fontSize:12,color:T.exTx,marginTop:1}}>{card.example.tl}</div><div style={{fontSize:12,color:T.muted,marginTop:1}}>{exLang}</div></div>}
                 </div>
               </div>
