@@ -18,6 +18,101 @@ const TL={bgGrad:"linear-gradient(155deg,#F8F6F3 0%,#F2EDE8 30%,#ECE8F2 55%,#E8F
 const TD={bgGrad:"linear-gradient(155deg,#14101A 0%,#181420 30%,#121418 55%,#161218 75%,#181418 100%)",cardFront:"linear-gradient(155deg,#201828,#1A1620 40%,#161420)",text:"#EDE8F0",sub:"#8A8098",muted:"#585060",faint:"#383040",hintBg:"rgba(255,255,255,.04)",hintBd:"rgba(255,255,255,.08)",hintTx:"#8A8098",trickBg:"rgba(88,176,112,.08)",trickBd:"rgba(88,176,112,.14)",trickTx:"#78C098",pillBg:"rgba(255,255,255,.04)",pillBd:"rgba(255,255,255,.06)",btnBg:"rgba(255,255,255,.05)",btnBd:"rgba(255,255,255,.08)",btnTx:"#8A8098",dotBg:"rgba(255,255,255,.08)",divider:"rgba(255,255,255,.05)",cardShadow:"0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.03)",accent:"#E08898",pronBg:"rgba(224,136,152,.10)",pronBd:"rgba(224,136,152,.20)",speedBg:"rgba(255,255,255,.03)",speedBd:"rgba(255,255,255,.06)",speedActive:"rgba(224,136,152,.14)",inputBg:"rgba(255,255,255,.06)",inputBd:"rgba(255,255,255,.10)",overlayBg:"rgba(20,16,26,.98)",tabBg:"#1A1620",tabBd:"rgba(255,255,255,.06)",barFill:"#E08898",exBg:"rgba(80,168,184,.08)",exBd:"rgba(80,168,184,.12)",exTx:"#78C0D0",catCardBg:"rgba(255,255,255,.04)",catCardBd:"rgba(255,255,255,.06)",catCardShadow:"0 2px 12px rgba(0,0,0,.2)"};
 const SPEEDS=[{key:"normal",label:"Normal",rate:.82,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.15,emoji:"🐢"}];
 
+// ——— LANDING PAGE ———
+const PREVIEW_CARDS=[
+  {front:"Hello",back:"नमस्ते",tl:"Namaste",color:"#C06080"},
+  {front:"Water",back:"पानी",tl:"Paani",color:"#50A8B8"},
+  {front:"Thank you",back:"शुक्रिया",tl:"Shukriya",color:"#58B070"},
+  {front:"Beautiful",back:"सुन्दर",tl:"Sundar",color:"#A070C0"},
+  {front:"Family",back:"परिवार",tl:"Parivaar",color:"#D89050"},
+];
+const FEATURES=[
+  {icon:"🗣️",title:"Audio pronunciation",desc:"Normal & slow speed for every word, plus example sentences"},
+  {icon:"🧠",title:"Spaced repetition",desc:"5-level system adapts to what you know and what needs work"},
+  {icon:"🇩🇪",title:"Built for German speakers",desc:"Memory tricks, hints & full German interface available"},
+  {icon:"📊",title:"Track your progress",desc:"Daily goals, mastery charts & category breakdowns"},
+];
+
+function LandingPage({onStart,onLogin}){
+  const[flipIdx,setFlipIdx]=useState(0);
+  const[isFlipped,setIsFlipped]=useState(false);
+  const[fadeIn,setFadeIn]=useState(false);
+  useEffect(()=>{setTimeout(()=>setFadeIn(true),100);},[]);
+  useEffect(()=>{const iv=setInterval(()=>{setIsFlipped(true);setTimeout(()=>{setFlipIdx(i=>(i+1)%PREVIEW_CARDS.length);setIsFlipped(false);},700);},3200);return()=>clearInterval(iv);},[]);
+  const pc=PREVIEW_CARDS[flipIdx];
+  return(
+    <div style={{minHeight:"100vh",background:"linear-gradient(170deg,#FBF9F6 0%,#F4EFE9 25%,#EDE8F2 50%,#E8F0F0 75%,#F7F4EC 100%)",fontFamily:"'Outfit',sans-serif",overflow:"hidden"}}>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+      <style>{`
+        @keyframes floatA{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-12px) rotate(-6deg)}}
+        @keyframes floatB{0%,100%{transform:translateY(0) rotate(4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
+        @keyframes floatC{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(-2deg)}}
+        .land-fade{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+        .land-fade.in{opacity:1;transform:translateY(0)}
+        *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+      `}</style>
+      <nav style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 24px",maxWidth:960,margin:"0 auto"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:22,fontFamily:"'Noto Sans Devanagari',sans-serif",fontWeight:700,color:"#C06080"}}>हि</span>
+          <span style={{fontSize:17,fontWeight:800,color:"#1E1A20",letterSpacing:-.5}}>Hindi Flashcards</span>
+        </div>
+        <button onClick={onLogin} style={{padding:"9px 20px",borderRadius:12,border:"1.5px solid rgba(0,0,0,.1)",background:"#FFF",color:"#58505E",fontSize:14,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>Log in</button>
+      </nav>
+      <div className={`land-fade ${fadeIn?"in":""}`} style={{maxWidth:960,margin:"0 auto",padding:"40px 24px 0",display:"flex",flexDirection:"column",alignItems:"center"}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:20,background:"rgba(192,96,128,.08)",border:"1px solid rgba(192,96,128,.15)",marginBottom:20}}>
+          <span style={{fontSize:13,fontWeight:600,color:"#C06080"}}>Free forever · No credit card</span>
+        </div>
+        <h1 style={{fontSize:"clamp(32px,6vw,56px)",fontWeight:900,textAlign:"center",lineHeight:1.1,color:"#1E1A20",maxWidth:640,letterSpacing:"-1.5px"}}>
+          Learn Hindi faster with<br/><span style={{color:"#C06080"}}>smart flashcards</span>
+        </h1>
+        <p style={{fontSize:"clamp(16px,2.5vw,19px)",color:"#58505E",textAlign:"center",maxWidth:500,lineHeight:1.6,marginTop:16,fontWeight:400}}>
+          {ALL_CARDS.length} cards across 13 categories. Audio pronunciation, spaced repetition, and memory tricks designed for German speakers.
+        </p>
+        <div style={{display:"flex",gap:12,marginTop:28,flexWrap:"wrap",justifyContent:"center"}}>
+          <button onClick={onStart} style={{padding:"15px 36px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#C06080,#D08898)",color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(192,96,128,.3),0 1px 3px rgba(0,0,0,.1)",letterSpacing:-.3}}>Start learning →</button>
+          <button onClick={onLogin} style={{padding:"15px 28px",borderRadius:16,border:"1.5px solid rgba(0,0,0,.1)",background:"#FFF",color:"#1E1A20",fontSize:16,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>I have an account</button>
+        </div>
+      </div>
+      <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".2s",display:"flex",justifyContent:"center",padding:"48px 24px 20px",position:"relative"}}>
+        <div style={{position:"relative",width:320,height:220}}>
+          <div style={{position:"absolute",top:18,left:-20,width:160,height:100,borderRadius:16,background:"linear-gradient(135deg,#50A8B8,#50A8B8CC)",opacity:.15,animation:"floatA 4s ease-in-out infinite"}}/>
+          <div style={{position:"absolute",bottom:10,right:-15,width:140,height:90,borderRadius:16,background:"linear-gradient(135deg,#A070C0,#A070C0CC)",opacity:.12,animation:"floatB 5s ease-in-out infinite"}}/>
+          <div style={{position:"absolute",top:-5,right:30,width:120,height:80,borderRadius:14,background:"linear-gradient(135deg,#58B070,#58B070CC)",opacity:.1,animation:"floatC 4.5s ease-in-out infinite"}}/>
+          <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:260,height:170,perspective:800}}>
+            <div style={{width:"100%",height:"100%",position:"relative",transformStyle:"preserve-3d",transition:"transform .6s cubic-bezier(.23,1,.32,1)",transform:isFlipped?"rotateY(180deg)":"rotateY(0)"}}>
+              <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",borderRadius:20,background:"#FFF",border:`2px solid ${pc.color}18`,boxShadow:"0 12px 40px rgba(30,20,40,.08),0 2px 8px rgba(0,0,0,.04)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
+                <div style={{fontSize:11,color:"#908898",letterSpacing:2,textTransform:"uppercase",fontWeight:600,marginBottom:8}}>English</div>
+                <div style={{fontSize:32,fontWeight:800,color:"#1E1A20"}}>{pc.front}</div>
+                <div style={{marginTop:12,fontSize:12,color:"#C8C0D0"}}>tap to flip</div>
+              </div>
+              <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)",borderRadius:20,background:`linear-gradient(155deg,${pc.color}08,#FFF 30%)`,border:`2px solid ${pc.color}20`,boxShadow:"0 12px 40px rgba(30,20,40,.08),0 2px 8px rgba(0,0,0,.04)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
+                <div style={{fontSize:11,color:pc.color,letterSpacing:2,textTransform:"uppercase",fontWeight:700,marginBottom:6,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी</div>
+                <div style={{fontSize:36,fontWeight:700,color:"#1E1A20",fontFamily:"'Noto Sans Devanagari',sans-serif"}}>{pc.back}</div>
+                <div style={{fontSize:15,color:pc.color,fontWeight:600,marginTop:4}}>{pc.tl}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".4s",maxWidth:800,margin:"0 auto",padding:"30px 24px 40px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
+          {FEATURES.map((f,i)=>(
+            <div key={i} style={{padding:"20px 18px",borderRadius:18,background:"#FFF",border:"1px solid rgba(0,0,0,.05)",boxShadow:"0 2px 12px rgba(0,0,0,.03)"}}>
+              <div style={{fontSize:28,marginBottom:8}}>{f.icon}</div>
+              <div style={{fontSize:15,fontWeight:700,color:"#1E1A20",marginBottom:4}}>{f.title}</div>
+              <div style={{fontSize:13,color:"#58505E",lineHeight:1.5}}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".5s",textAlign:"center",padding:"20px 24px 50px"}}>
+        <div style={{fontSize:13,color:"#908898",marginBottom:14}}>✓ 100% free &nbsp; ✓ No ads &nbsp; ✓ Works offline</div>
+        <button onClick={onStart} style={{padding:"15px 40px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#C06080,#D08898)",color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(192,96,128,.3)"}}>Start learning Hindi →</button>
+      </div>
+    </div>
+  );
+}
+
 function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);const[v,sv]=useState(null);const r=useRef(null);useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;const p=()=>{const vs=r.current.getVoices();sv(vs.find(x=>x.lang==="hi-IN")||vs.find(x=>x.lang.startsWith("hi"))||null);};p();r.current.addEventListener("voiceschanged",p);return()=>r.current?.removeEventListener("voiceschanged",p);},[]);
   // speakParts: split on "/" and speak each part with a pause
   const speak=useCallback((t,rate=.82,k="normal")=>{if(!r.current)return;r.current.cancel();
@@ -44,8 +139,8 @@ function PasswordInput({value,onChange,placeholder,onKeyDown,T}){const[v,setV]=u
 const TUTORIAL=[{e:"👋",t:"Welcome!",b:"Learn Hindi with flashcards, audio & spaced repetition."},{e:"📚",t:"Flip & Swipe",b:"Tap to flip. Swipe right = got it, left = still learning."},{e:"💡",t:"Hints",b:"Tap '💡 Hint' for a clue — first letter, letter count, sound-alikes."},{e:"🏆",t:"5 Levels",b:"Correct → level up, wrong → level down. Higher levels repeat less."},{e:"🗣️",t:"Audio",b:"Normal & Slow speed. Example sentences with audio too."},{e:"🌐",t:"Deutsch?",b:"Switch to German in Settings. Every card has 🇩🇪 memory tricks."},{e:"🚀",t:"Ready!",b:"Pick a category and start — बहुत मज़ा आएगा!"}];
 function TutorialModal({T,onDone}){const[s,setS]=useState(0);const t=TUTORIAL[s];const last=s===TUTORIAL.length-1;return(<div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.5)",padding:20,boxSizing:"border-box"}}><div style={{background:T.overlayBg,borderRadius:28,padding:"32px 24px 24px",width:"100%",maxWidth:380,textAlign:"center",boxShadow:"0 20px 60px rgba(0,0,0,.2)",backdropFilter:"blur(20px)"}}><div style={{fontSize:48,marginBottom:8}}>{t.e}</div><h2 style={{fontSize:22,fontWeight:800,color:T.text,margin:"0 0 8px"}}>{t.t}</h2><p style={{fontSize:15,color:T.sub,lineHeight:1.6,margin:"0 0 20px"}}>{t.b}</p><div style={{display:"flex",gap:4,justifyContent:"center",marginBottom:16}}>{TUTORIAL.map((_,i)=>(<div key={i} style={{width:i===s?18:8,height:5,borderRadius:3,background:i===s?T.accent:`${T.accent}30`,transition:"all .3s"}}/>))}</div><div style={{display:"flex",gap:10}}>{s>0&&<button onClick={()=>setS(s=>s-1)} style={{flex:1,padding:"12px",borderRadius:14,border:`1.5px solid ${T.pillBd}`,background:T.btnBg,color:T.sub,fontSize:15,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>←</button>}<button onClick={()=>last?onDone():setS(s=>s+1)} style={{flex:1,padding:"12px",borderRadius:14,border:"none",background:`linear-gradient(135deg,${T.accent},${T.accent}DD)`,color:"#FFF",fontSize:15,fontFamily:"inherit",fontWeight:700,cursor:"pointer"}}>{last?"Let's go!":"Next →"}</button></div><button onClick={onDone} style={{marginTop:8,background:"none",border:"none",color:T.muted,fontSize:13,fontFamily:"inherit",cursor:"pointer"}}>Skip</button></div></div>);}
 
-function AuthScreen({T}){const[isS,setIsS]=useState(false);const[nm,setNm]=useState("");const[em,setEm]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[ld,setLd]=useState(false);const sub=async()=>{setErr("");if(isS&&!nm.trim()){setErr("Enter your name");return;}if(!em||!pw){setErr("Fill all fields");return;}if(pw.length<6){setErr("Min 6 chars");return;}setLd(true);try{if(isS){const c=await createUserWithEmailAndPassword(auth,em,pw);await setDoc(doc(db,"users",c.user.uid),{name:nm.trim(),cardLevels:{},stats:{totalMinutes:0,dailyLog:{},dailyTarget:25},lang:"en",showTutorial:true});}else await signInWithEmailAndPassword(auth,em,pw);}catch(e){setErr(e.code==="auth/invalid-credential"?"Invalid email/password.":e.code==="auth/email-already-in-use"?"Already registered.":e.message);}setLd(false);};const iS={width:"100%",padding:"14px 16px",borderRadius:14,border:`1.5px solid ${T.inputBd}`,background:T.inputBg,color:T.text,fontSize:16,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"};
-return(<div style={{minHeight:"100vh",background:T.bgGrad,fontFamily:"'Outfit',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",boxSizing:"border-box"}}><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/><div style={{width:"100%",maxWidth:400,textAlign:"center"}}><div style={{fontSize:15,letterSpacing:3,color:T.accent,fontWeight:700,marginBottom:6,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी सीखें</div><h1 style={{fontSize:34,fontWeight:800,margin:0,color:T.text}}>Hindi Flashcards</h1><p style={{fontSize:15,color:T.sub,margin:"8px 0 28px"}}>{isS?"Create account":"Log in"}</p><div style={{display:"flex",flexDirection:"column",gap:12}}>{isS&&<input placeholder="Your name" value={nm} onChange={e=>setNm(e.target.value)} style={iS}/>}<input type="email" placeholder="Email" value={em} onChange={e=>setEm(e.target.value)} style={iS}/><PasswordInput value={pw} onChange={e=>setPw(e.target.value)} placeholder="Password (min 6)" onKeyDown={e=>e.key==="Enter"&&sub()} T={T}/>{err&&<div style={{padding:"10px",borderRadius:12,background:"#E8505014",border:"1px solid #E8505030",color:"#C03040",fontSize:13,textAlign:"left"}}>{err}</div>}<button onClick={sub} disabled={ld} style={{padding:"15px",borderRadius:16,border:"none",background:`linear-gradient(135deg,${T.accent},${T.accent}CC)`,color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:ld?"wait":"pointer",opacity:ld?.7:1}}>{ld?"...":isS?"Create Account":"Log In"}</button><button onClick={()=>{setIsS(s=>!s);setErr("");}} style={{padding:"10px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:"transparent",color:T.sub,fontSize:14,fontFamily:"inherit",cursor:"pointer"}}>{isS?"Have account? Log in":"New? Sign up"}</button></div></div></div>);}
+function AuthScreen({T,onBack,initialMode}){const[isS,setIsS]=useState(initialMode==="signup");const[nm,setNm]=useState("");const[em,setEm]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[ld,setLd]=useState(false);const sub=async()=>{setErr("");if(isS&&!nm.trim()){setErr("Enter your name");return;}if(!em||!pw){setErr("Fill all fields");return;}if(pw.length<6){setErr("Min 6 chars");return;}setLd(true);try{if(isS){const c=await createUserWithEmailAndPassword(auth,em,pw);await setDoc(doc(db,"users",c.user.uid),{name:nm.trim(),cardLevels:{},stats:{totalMinutes:0,dailyLog:{},dailyTarget:25},lang:"en",showTutorial:true});}else await signInWithEmailAndPassword(auth,em,pw);}catch(e){setErr(e.code==="auth/invalid-credential"?"Invalid email/password.":e.code==="auth/email-already-in-use"?"Already registered.":e.message);}setLd(false);};const iS={width:"100%",padding:"14px 16px",borderRadius:14,border:`1.5px solid ${T.inputBd}`,background:T.inputBg,color:T.text,fontSize:16,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"};
+return(<div style={{minHeight:"100vh",background:T.bgGrad,fontFamily:"'Outfit',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",boxSizing:"border-box"}}><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/><div style={{width:"100%",maxWidth:400}}>{onBack&&<button onClick={onBack} style={{display:"flex",alignItems:"center",gap:4,padding:"8px 14px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:T.btnBg,color:T.sub,fontSize:13,fontFamily:"inherit",fontWeight:600,cursor:"pointer",marginBottom:28}}>← Back</button>}<div style={{textAlign:"center"}}><div style={{fontSize:15,letterSpacing:3,color:T.accent,fontWeight:700,marginBottom:6,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी सीखें</div><h1 style={{fontSize:30,fontWeight:800,margin:0,color:T.text}}>{isS?"Create your account":"Welcome back"}</h1>{isS&&<p style={{fontSize:14,color:T.muted,margin:"10px 0 0",lineHeight:1.5}}>Save your progress across devices and track your learning journey.</p>}<p style={{fontSize:15,color:T.sub,margin:"8px 0 24px"}}>{isS?"":"Log in to continue learning"}</p></div><div style={{display:"flex",flexDirection:"column",gap:12}}>{isS&&<input placeholder="Your name" value={nm} onChange={e=>setNm(e.target.value)} style={iS}/>}<input type="email" placeholder="Email" value={em} onChange={e=>setEm(e.target.value)} style={iS}/><PasswordInput value={pw} onChange={e=>setPw(e.target.value)} placeholder="Password (min 6)" onKeyDown={e=>e.key==="Enter"&&sub()} T={T}/>{err&&<div style={{padding:"10px",borderRadius:12,background:"#E8505014",border:"1px solid #E8505030",color:"#C03040",fontSize:13,textAlign:"left"}}>{err}</div>}<button onClick={sub} disabled={ld} style={{padding:"15px",borderRadius:16,border:"none",background:`linear-gradient(135deg,${T.accent},${T.accent}CC)`,color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:ld?"wait":"pointer",opacity:ld?.7:1}}>{ld?"...":isS?"Create Account":"Log In"}</button><button onClick={()=>{setIsS(s=>!s);setErr("");}} style={{padding:"10px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:"transparent",color:T.sub,fontSize:14,fontFamily:"inherit",cursor:"pointer"}}>{isS?"Have account? Log in":"New? Sign up"}</button></div></div></div>);}
 
 function getLevel(cl,id){return cl[id]||{level:1,lastCorrect:null};}
 function isDue(cl,id){const c=getLevel(cl,id);if(!c.lastCorrect||c.level<=1)return true;return Date.now()-new Date(c.lastCorrect).getTime()>=LVL_D[Math.min(c.level-1,4)];}
@@ -79,6 +174,7 @@ export default function App(){
   const[showTutorial,setShowTutorial]=useState(false);const[lang,setLang]=useState("en");
   const[shuffled,setShuffled]=useState(false);const[shuffledCards,setShuffledCards]=useState([]);
   const[showNamaste,setShowNamaste]=useState(false);
+  const[authMode,setAuthMode]=useState(null); // null=landing, "signup", "login"
   // New toggle states for card back info panels
   const[showLatin,setShowLatin]=useState(false);
   const[showGender,setShowGender]=useState(false);
@@ -152,14 +248,17 @@ export default function App(){
   const onSwipeL=useCallback(()=>{setSwipeHint("left");setTimeout(()=>setSwipeHint(null),400);markLearn();},[markLearn]);
   const onSwipeR=useCallback(()=>{setSwipeHint("right");setTimeout(()=>setSwipeHint(null),400);markKnow();},[markKnow]);
   const swipe=useSwipe(onSwipeL,onSwipeR);
-  const handleLogout=async()=>{stop();await signOut(auth);};
+  const handleLogout=async()=>{stop();await signOut(auth);setAuthMode(null);};
   const pct=Math.round((knownSet.size/ALL_CARDS.length)*100);
   const handlePlay=(e,sp)=>{e.stopPropagation();markActive();if(speaking&&activeSpeed===sp.key){stop();return;}speak(card.back,sp.rate,sp.key);};
   const displayName=userName||user?.email?.split("@")[0]||"Learner";
   const jumpToCard=id=>{setPracticeMode(null);setActiveCategory("All");setShuffled(false);setFlipped(false);setShowHint(false);stop();const i=ALL_CARDS.findIndex(c=>c.id===id);if(i>=0)setIdx(i);setShowList(null);setTab("practice");};
   const exitPractice=()=>{setPracticeMode(null);setActiveCategory(null);setShuffled(false);setIdx(0);setFlipped(false);setShowHint(false);};
   const goBackToGrid=()=>{setActiveCategory(null);setShuffled(false);setIdx(0);setFlipped(false);setShowHint(false);stop();};
-  const enterCategory=cat=>{setActiveCategory(cat);setIdx(0);setFlipped(false);setShowHint(false);setShuffled(false);};
+  const enterCategory=cat=>{setActiveCategory(cat);setIdx(0);setFlipped(false);setShowHint(false);
+    const catCards=cat==="All"?ALL_CARDS:ALL_CARDS.filter(c=>c.cat===cat);
+    setShuffledCards(shuffleArr(catCards));setShuffled(true);
+  };
   const doShuffle=()=>{setShuffledCards(shuffleArr(baseCards));setShuffled(true);setIdx(0);setFlipped(false);};
   const dailyTarget=stats.dailyTarget||25;const targetPct=Math.min(Math.round((todayFlips/dailyTarget)*100),100);
   const cl=card?getLevel(cardLevels,card.id):{level:1};
@@ -183,7 +282,11 @@ export default function App(){
   });
 
   if(authLoading)return(<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:T.bgGrad,fontFamily:"'Outfit',sans-serif"}}><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/><div style={{textAlign:"center",color:T.muted}}><div style={{fontSize:40,marginBottom:12}}>🇮🇳</div><div style={{fontSize:18,fontWeight:600}}>Loading...</div></div></div>);
-  if(!user)return<AuthScreen T={T}/>;
+  if(!user){
+    if(authMode==="signup")return <AuthScreen T={TL} onBack={()=>setAuthMode(null)} initialMode="signup"/>;
+    if(authMode==="login")return <AuthScreen T={TL} onBack={()=>setAuthMode(null)} initialMode="login"/>;
+    return <LandingPage onStart={()=>setAuthMode("signup")} onLogin={()=>setAuthMode("login")}/>;
+  }
 
   return(
     <div style={{minHeight:"100vh",background:T.bgGrad,fontFamily:"'Outfit',sans-serif",color:T.text,display:"flex",flexDirection:"column",alignItems:"center",padding:"14px 14px 80px",boxSizing:"border-box",transition:"background .4s"}}>
@@ -205,15 +308,29 @@ export default function App(){
           {practiceMode&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 14px",borderRadius:12,background:"#C8A04014",border:"1.5px solid #C8A04030",marginBottom:8}}><span style={{fontSize:13,fontWeight:700,color:"#C8A040"}}>🎯 {practiceMode==="learning"?u.pracLearn:u.pracDue}: {cards.length}</span><button onClick={exitPractice} style={{padding:"5px 10px",borderRadius:10,border:"1px solid #C8A04040",background:"transparent",color:"#C8A040",fontSize:11,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>{u.exit}</button></div>}
 
           {!inCardView&&<>
+            {/* ——— Top action: Browse All + Due ——— */}
+            <div style={{display:"flex",gap:10,marginBottom:14}}>
+              <button onClick={()=>enterCategory("All")} style={{flex:1,padding:"16px 14px",borderRadius:18,border:`1.5px solid ${T.accent}30`,background:`${T.accent}08`,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4,boxShadow:T.catCardShadow}}>
+                <span style={{fontSize:24}}>📚</span>
+                <span style={{fontSize:15,fontWeight:700,color:T.text}}>{u.browseAll}</span>
+                <span style={{fontSize:12,color:T.muted,fontWeight:500}}>{ALL_CARDS.length} {lang==="de"?"Karten":"cards"} · 🔀</span>
+              </button>
+              {dueCards.length>0&&<button onClick={()=>{setPracticeMode("due");setShuffledCards(shuffleArr(dueCards));setShuffled(true);setIdx(0);}} style={{flex:1,padding:"16px 14px",borderRadius:18,border:"1.5px solid #D0606030",background:"#D0606008",cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4,boxShadow:T.catCardShadow}}>
+                <span style={{fontSize:24}}>🔥</span>
+                <span style={{fontSize:15,fontWeight:700,color:"#D06060"}}>{dueCards.length} {u.due}</span>
+                <span style={{fontSize:12,color:T.muted,fontWeight:500}}>{lang==="de"?"Jetzt üben":"Practice now"} · 🔀</span>
+              </button>}
+            </div>
+            <div style={{fontSize:13,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:1.5,marginBottom:8,padding:"0 2px"}}>{u.cats}</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:14}}>
               {CATEGORIES.filter(c=>c!=="All").map(cat=>{const cc=CC[cat]||T.accent;const catCards=ALL_CARDS.filter(c=>c.cat===cat);const mastered=catCards.filter(c=>getLevel(cardLevels,c.id).level>=5).length;const due=catCards.filter(c=>isDue(cardLevels,c.id)).length;const pctCat=catCards.length?Math.round((mastered/catCards.length)*100):0;return(<button key={cat} onClick={()=>enterCategory(cat)} style={{padding:"16px 14px",borderRadius:18,border:`1px solid ${T.catCardBd}`,background:T.catCardBg,boxShadow:T.catCardShadow,cursor:"pointer",textAlign:"left",fontFamily:"inherit",display:"flex",flexDirection:"column",gap:6,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:0,left:0,right:0,height:3,background:cc}}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:22}}>{CAT_EMOJI[cat]||"📁"}</span><span style={{fontSize:10,fontWeight:600,color:T.muted}}>{catCards.length}</span></div><div style={{fontSize:15,fontWeight:700,color:T.text}}>{catName(cat)}</div><div style={{height:4,borderRadius:2,background:T.dotBg,overflow:"hidden"}}><div style={{height:"100%",borderRadius:2,width:`${pctCat}%`,background:cc}}/></div><div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:T.muted}}><span>{mastered}/{catCards.length} ⭐</span>{due>0&&<span style={{color:"#D06060",fontWeight:600}}>{due} {u.dueNow}</span>}</div></button>);})}
             </div>
-            <div style={{display:"flex",gap:8,marginBottom:14}}><button onClick={()=>enterCategory("All")} style={{flex:1,padding:"12px",borderRadius:14,border:`1px solid ${T.pillBd}`,background:T.pillBg,color:T.text,fontSize:14,fontFamily:"inherit",fontWeight:700,cursor:"pointer",boxShadow:T.catCardShadow}}>📚 {u.browseAll} ({ALL_CARDS.length})</button>{dueCards.length>0&&<button onClick={()=>{setPracticeMode("due");setIdx(0);}} style={{flex:1,padding:"12px",borderRadius:14,border:"1.5px solid #D0606030",background:"#D0606010",color:"#D06060",fontSize:14,fontFamily:"inherit",fontWeight:700,cursor:"pointer"}}>🔥 {dueCards.length} {u.due}</button>}</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,padding:"10px 0",borderTop:`1px solid ${T.divider}`}}>{[{l:u.mastered,v:knownSet.size,c:"#40A050",cl:()=>setShowList("known")},{l:u.learning,v:learningSet.size,c:"#C8A040",cl:()=>setShowList("learning")},{l:u.due,v:dueCards.length,c:"#D06060",cl:()=>{setPracticeMode("due");setIdx(0);}}].map(s=>(<div key={s.l} onClick={s.cl} style={{textAlign:"center",padding:"8px 4px",borderRadius:12,background:T.pillBg,border:`1px solid ${T.pillBd}`,cursor:"pointer",boxShadow:T.catCardShadow}}><div style={{fontSize:20,fontWeight:800,color:s.c}}>{s.v}</div><div style={{fontSize:10,color:T.muted,fontWeight:600,textTransform:"uppercase"}}>{s.l}</div></div>))}</div>
+
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,padding:"10px 0",borderTop:`1px solid ${T.divider}`}}>{[{l:u.mastered,v:knownSet.size,c:"#40A050",cl:()=>setShowList("known")},{l:u.learning,v:learningSet.size,c:"#C8A040",cl:()=>setShowList("learning")},{l:u.due,v:dueCards.length,c:"#D06060",cl:()=>{setPracticeMode("due");setShuffledCards(shuffleArr(dueCards));setShuffled(true);setIdx(0);}}].map(s=>(<div key={s.l} onClick={s.cl} style={{textAlign:"center",padding:"8px 4px",borderRadius:12,background:T.pillBg,border:`1px solid ${T.pillBd}`,cursor:"pointer",boxShadow:T.catCardShadow}}><div style={{fontSize:20,fontWeight:800,color:s.c}}>{s.v}</div><div style={{fontSize:10,color:T.muted,fontWeight:600,textTransform:"uppercase"}}>{s.l}</div></div>))}</div>
           </>}
 
           {inCardView&&cards.length>0&&<>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><button onClick={practiceMode?exitPractice:goBackToGrid} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 12px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:T.pillBg,color:T.sub,fontSize:13,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>← {u.back}</button><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:13,color,fontWeight:700}}>{!practiceMode&&activeCategory!=="All"?catName(activeCategory)+" · ":""}{idx+1}/{cards.length}</span><button onClick={doShuffle} style={{padding:"5px 10px",borderRadius:10,border:`1px solid ${T.pillBd}`,background:shuffled?`${T.accent}14`:T.pillBg,color:shuffled?T.accent:T.muted,fontSize:11,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>🔀 {u.shuffle}</button></div></div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><button onClick={practiceMode?exitPractice:goBackToGrid} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 12px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:T.pillBg,color:T.sub,fontSize:13,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>← {u.back}</button><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:13,color,fontWeight:700}}>{!practiceMode&&activeCategory!=="All"?catName(activeCategory)+" · ":""}{idx+1}/{cards.length}</span><button onClick={doShuffle} style={{padding:"6px 12px",borderRadius:12,border:`1.5px solid ${T.accent}40`,background:`${T.accent}12`,color:T.accent,fontSize:12,fontFamily:"inherit",fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>🔀 {u.shuffle}</button></div></div>
             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6,padding:"0 2px"}}><div style={{display:"flex",gap:3}}>{[1,2,3,4,5].map(l=>(<div key={l} style={{width:8,height:8,borderRadius:"50%",background:cl.level>=l?LVL_C[l-1]:T.dotBg}}/>))}</div><span style={{fontSize:12,fontWeight:700,color:LVL_C[cl.level-1]}}>{lvlNames[cl.level-1]}</span></div>
 
             <div {...swipe} onClick={doFlip} style={{perspective:1200,cursor:"pointer",marginBottom:8,height:450,position:"relative"}}>
