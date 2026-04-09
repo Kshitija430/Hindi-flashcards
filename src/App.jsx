@@ -20,28 +20,40 @@ const SPEEDS=[{key:"normal",label:"Normal",rate:.82,emoji:"🗣️"},{key:"slow"
 
 // ——— LANDING PAGE ———
 const PREVIEW_CARDS=[
-  {front:"Hello",back:"नमस्ते",tl:"Namaste",color:"#C06080"},
+  {front:"Hello",back:"नमस्ते",tl:"Namaste",color:"#4A8EC2"},
   {front:"Water",back:"पानी",tl:"Paani",color:"#50A8B8"},
-  {front:"Thank you",back:"शुक्रिया",tl:"Shukriya",color:"#58B070"},
-  {front:"Beautiful",back:"सुन्दर",tl:"Sundar",color:"#A070C0"},
+  {front:"Thank you",back:"शुक्रिया",tl:"Shukriya",color:"#5B8ED0"},
+  {front:"Beautiful",back:"सुन्दर",tl:"Sundar",color:"#6B7EC8"},
   {front:"Family",back:"परिवार",tl:"Parivaar",color:"#D89050"},
 ];
 const FEATURES=[
   {icon:"🗣️",title:"Audio pronunciation",desc:"Normal & slow speed for every word, plus example sentences"},
   {icon:"🧠",title:"Spaced repetition",desc:"5-level system adapts to what you know and what needs work"},
   {icon:"🇩🇪",title:"Built for German speakers",desc:"Memory tricks, hints & full German interface available"},
-  {icon:"📊",title:"Track your progress",desc:"Daily goals, mastery charts & category breakdowns"},
+  {icon:"🎯",title:"Set daily goals",desc:"Choose your daily flip target and build a consistent learning habit"},
+  {icon:"📝",title:"Rich card details",desc:"Flip to see gender, singular/plural, transliteration & example sentences"},
+  {icon:"📊",title:"Track your progress",desc:"Mastery charts, level breakdowns & category progress at a glance"},
 ];
 
 function LandingPage({onStart,onLogin}){
-  const[flipIdx,setFlipIdx]=useState(0);
-  const[isFlipped,setIsFlipped]=useState(false);
+  const[cardIdx,setCardIdx]=useState(0);
+  const[phase,setPhase]=useState("show"); // "show","flip","slide"
   const[fadeIn,setFadeIn]=useState(false);
   useEffect(()=>{setTimeout(()=>setFadeIn(true),100);},[]);
-  useEffect(()=>{const iv=setInterval(()=>{setIsFlipped(true);setTimeout(()=>{setFlipIdx(i=>(i+1)%PREVIEW_CARDS.length);setIsFlipped(false);},700);},3200);return()=>clearInterval(iv);},[]);
-  const pc=PREVIEW_CARDS[flipIdx];
+  useEffect(()=>{
+    const cycle=()=>{
+      setPhase("flip");
+      setTimeout(()=>{setPhase("slide");
+        setTimeout(()=>{setCardIdx(i=>(i+1)%PREVIEW_CARDS.length);setPhase("show");},600);
+      },1800);
+    };
+    const iv=setInterval(cycle,3600);
+    return()=>clearInterval(iv);
+  },[]);
+  const pc=PREVIEW_CARDS[cardIdx];
+  const nextPc=PREVIEW_CARDS[(cardIdx+1)%PREVIEW_CARDS.length];
   return(
-    <div style={{minHeight:"100vh",background:"linear-gradient(170deg,#FBF9F6 0%,#F4EFE9 25%,#EDE8F2 50%,#E8F0F0 75%,#F7F4EC 100%)",fontFamily:"'Outfit',sans-serif",overflow:"hidden"}}>
+    <div style={{minHeight:"100vh",background:"linear-gradient(170deg,#F6F9FC 0%,#EDF2F8 25%,#E8EEF6 50%,#E4F0F4 75%,#F2F6FA 100%)",fontFamily:"'Outfit',sans-serif",overflow:"hidden"}}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
       <style>{`
         @keyframes floatA{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-12px) rotate(-6deg)}}
@@ -53,51 +65,57 @@ function LandingPage({onStart,onLogin}){
       `}</style>
       <nav style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 24px",maxWidth:960,margin:"0 auto"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:22,fontFamily:"'Noto Sans Devanagari',sans-serif",fontWeight:700,color:"#C06080"}}>हि</span>
+          <span style={{fontSize:22,fontFamily:"'Noto Sans Devanagari',sans-serif",fontWeight:700,color:"#4A8EC2"}}>हि</span>
           <span style={{fontSize:17,fontWeight:800,color:"#1E1A20",letterSpacing:-.5}}>Hindi Flashcards</span>
         </div>
-        <button onClick={onLogin} style={{padding:"9px 20px",borderRadius:12,border:"1.5px solid rgba(0,0,0,.1)",background:"#FFF",color:"#58505E",fontSize:14,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>Log in</button>
+        <button onClick={onLogin} style={{padding:"9px 20px",borderRadius:12,border:"1.5px solid rgba(74,142,194,.2)",background:"#FFF",color:"#4A8EC2",fontSize:14,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>Log in</button>
       </nav>
       <div className={`land-fade ${fadeIn?"in":""}`} style={{maxWidth:960,margin:"0 auto",padding:"40px 24px 0",display:"flex",flexDirection:"column",alignItems:"center"}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:20,background:"rgba(192,96,128,.08)",border:"1px solid rgba(192,96,128,.15)",marginBottom:20}}>
-          <span style={{fontSize:13,fontWeight:600,color:"#C06080"}}>Free forever · No credit card</span>
-        </div>
         <h1 style={{fontSize:"clamp(32px,6vw,56px)",fontWeight:900,textAlign:"center",lineHeight:1.1,color:"#1E1A20",maxWidth:640,letterSpacing:"-1.5px"}}>
-          Learn Hindi faster with<br/><span style={{color:"#C06080"}}>smart flashcards</span>
+          Learn Hindi faster with<br/><span style={{color:"#4A8EC2"}}>smart flashcards</span>
         </h1>
         <p style={{fontSize:"clamp(16px,2.5vw,19px)",color:"#58505E",textAlign:"center",maxWidth:500,lineHeight:1.6,marginTop:16,fontWeight:400}}>
           {ALL_CARDS.length} cards across 13 categories. Audio pronunciation, spaced repetition, and memory tricks designed for German speakers.
         </p>
         <div style={{display:"flex",gap:12,marginTop:28,flexWrap:"wrap",justifyContent:"center"}}>
-          <button onClick={onStart} style={{padding:"15px 36px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#C06080,#D08898)",color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(192,96,128,.3),0 1px 3px rgba(0,0,0,.1)",letterSpacing:-.3}}>Start learning →</button>
-          <button onClick={onLogin} style={{padding:"15px 28px",borderRadius:16,border:"1.5px solid rgba(0,0,0,.1)",background:"#FFF",color:"#1E1A20",fontSize:16,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>I have an account</button>
+          <button onClick={onStart} style={{padding:"15px 36px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#4A8EC2,#5BA0D4)",color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(74,142,194,.3),0 1px 3px rgba(0,0,0,.08)",letterSpacing:-.3}}>Start learning →</button>
         </div>
       </div>
+      {/* ——— Card stack animation ——— */}
       <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".2s",display:"flex",justifyContent:"center",padding:"48px 24px 20px",position:"relative"}}>
-        <div style={{position:"relative",width:320,height:220}}>
-          <div style={{position:"absolute",top:18,left:-20,width:160,height:100,borderRadius:16,background:"linear-gradient(135deg,#50A8B8,#50A8B8CC)",opacity:.15,animation:"floatA 4s ease-in-out infinite"}}/>
-          <div style={{position:"absolute",bottom:10,right:-15,width:140,height:90,borderRadius:16,background:"linear-gradient(135deg,#A070C0,#A070C0CC)",opacity:.12,animation:"floatB 5s ease-in-out infinite"}}/>
-          <div style={{position:"absolute",top:-5,right:30,width:120,height:80,borderRadius:14,background:"linear-gradient(135deg,#58B070,#58B070CC)",opacity:.1,animation:"floatC 4.5s ease-in-out infinite"}}/>
-          <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:260,height:170,perspective:800}}>
-            <div style={{width:"100%",height:"100%",position:"relative",transformStyle:"preserve-3d",transition:"transform .6s cubic-bezier(.23,1,.32,1)",transform:isFlipped?"rotateY(180deg)":"rotateY(0)"}}>
-              <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",borderRadius:20,background:"#FFF",border:`2px solid ${pc.color}18`,boxShadow:"0 12px 40px rgba(30,20,40,.08),0 2px 8px rgba(0,0,0,.04)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
-                <div style={{fontSize:11,color:"#908898",letterSpacing:2,textTransform:"uppercase",fontWeight:600,marginBottom:8}}>English</div>
-                <div style={{fontSize:32,fontWeight:800,color:"#1E1A20"}}>{pc.front}</div>
-                <div style={{marginTop:12,fontSize:12,color:"#C8C0D0"}}>tap to flip</div>
-              </div>
-              <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)",borderRadius:20,background:`linear-gradient(155deg,${pc.color}08,#FFF 30%)`,border:`2px solid ${pc.color}20`,boxShadow:"0 12px 40px rgba(30,20,40,.08),0 2px 8px rgba(0,0,0,.04)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
-                <div style={{fontSize:11,color:pc.color,letterSpacing:2,textTransform:"uppercase",fontWeight:700,marginBottom:6,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी</div>
-                <div style={{fontSize:36,fontWeight:700,color:"#1E1A20",fontFamily:"'Noto Sans Devanagari',sans-serif"}}>{pc.back}</div>
-                <div style={{fontSize:15,color:pc.color,fontWeight:600,marginTop:4}}>{pc.tl}</div>
+        <div style={{position:"relative",width:320,height:240}}>
+          <div style={{position:"absolute",top:18,left:-20,width:160,height:100,borderRadius:16,background:"linear-gradient(135deg,#4A8EC2,#4A8EC2CC)",opacity:.12,animation:"floatA 4s ease-in-out infinite"}}/>
+          <div style={{position:"absolute",bottom:10,right:-15,width:140,height:90,borderRadius:16,background:"linear-gradient(135deg,#5BA0D4,#5BA0D4CC)",opacity:.10,animation:"floatB 5s ease-in-out infinite"}}/>
+          <div style={{position:"absolute",top:-5,right:30,width:120,height:80,borderRadius:14,background:"linear-gradient(135deg,#50A8B8,#50A8B8CC)",opacity:.08,animation:"floatC 4.5s ease-in-out infinite"}}/>
+          <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:270,height:180}}>
+            {/* Next card peeking behind */}
+            <div style={{position:"absolute",inset:0,borderRadius:20,background:"#FFF",border:"2px solid rgba(74,142,194,.08)",boxShadow:"0 8px 30px rgba(30,40,60,.06)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,transform:"scale(.94) translateY(8px)",opacity:.5}}>
+              <div style={{fontSize:11,color:"#908898",letterSpacing:2,textTransform:"uppercase",fontWeight:600,marginBottom:8}}>English</div>
+              <div style={{fontSize:28,fontWeight:800,color:"#1E1A20"}}>{nextPc.front}</div>
+            </div>
+            {/* Current card */}
+            <div style={{position:"absolute",inset:0,perspective:800,transition:phase==="slide"?"transform .5s cubic-bezier(.4,0,.2,1),opacity .5s ease":"none",transform:phase==="slide"?"translateX(-120%) rotate(-8deg) scale(.9)":"translateX(0)",opacity:phase==="slide"?0:1,zIndex:2}}>
+              <div style={{width:"100%",height:"100%",position:"relative",transformStyle:"preserve-3d",transition:"transform .6s cubic-bezier(.23,1,.32,1)",transform:phase==="flip"?"rotateY(180deg)":"rotateY(0)"}}>
+                <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",borderRadius:20,background:"#FFF",border:`2px solid ${pc.color}14`,boxShadow:"0 12px 40px rgba(30,40,60,.08),0 2px 8px rgba(0,0,0,.04)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
+                  <div style={{fontSize:11,color:"#908898",letterSpacing:2,textTransform:"uppercase",fontWeight:600,marginBottom:8}}>English</div>
+                  <div style={{fontSize:32,fontWeight:800,color:"#1E1A20"}}>{pc.front}</div>
+                  <div style={{marginTop:12,fontSize:12,color:"#C0C8D4"}}>tap to flip</div>
+                </div>
+                <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)",borderRadius:20,background:`linear-gradient(155deg,${pc.color}0A,#FFF 30%)`,border:`2px solid ${pc.color}18`,boxShadow:"0 12px 40px rgba(30,40,60,.08),0 2px 8px rgba(0,0,0,.04)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
+                  <div style={{fontSize:11,color:pc.color,letterSpacing:2,textTransform:"uppercase",fontWeight:700,marginBottom:6,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी</div>
+                  <div style={{fontSize:36,fontWeight:700,color:"#1E1A20",fontFamily:"'Noto Sans Devanagari',sans-serif"}}>{pc.back}</div>
+                  <div style={{fontSize:15,color:pc.color,fontWeight:600,marginTop:4}}>{pc.tl}</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".4s",maxWidth:800,margin:"0 auto",padding:"30px 24px 40px"}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
+      {/* ——— Features grid ——— */}
+      <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".4s",maxWidth:840,margin:"0 auto",padding:"30px 24px 40px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:14}}>
           {FEATURES.map((f,i)=>(
-            <div key={i} style={{padding:"20px 18px",borderRadius:18,background:"#FFF",border:"1px solid rgba(0,0,0,.05)",boxShadow:"0 2px 12px rgba(0,0,0,.03)"}}>
+            <div key={i} style={{padding:"20px 18px",borderRadius:18,background:"#FFF",border:"1px solid rgba(74,142,194,.08)",boxShadow:"0 2px 12px rgba(30,40,60,.03)"}}>
               <div style={{fontSize:28,marginBottom:8}}>{f.icon}</div>
               <div style={{fontSize:15,fontWeight:700,color:"#1E1A20",marginBottom:4}}>{f.title}</div>
               <div style={{fontSize:13,color:"#58505E",lineHeight:1.5}}>{f.desc}</div>
@@ -105,9 +123,14 @@ function LandingPage({onStart,onLogin}){
           ))}
         </div>
       </div>
+      {/* ——— Trust signals + bottom CTA ——— */}
       <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".5s",textAlign:"center",padding:"20px 24px 50px"}}>
-        <div style={{fontSize:13,color:"#908898",marginBottom:14}}>✓ 100% free &nbsp; ✓ No ads &nbsp; ✓ Works offline</div>
-        <button onClick={onStart} style={{padding:"15px 40px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#C06080,#D08898)",color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(192,96,128,.3)"}}>Start learning Hindi →</button>
+        <div style={{display:"flex",justifyContent:"center",gap:20,flexWrap:"wrap",marginBottom:22}}>
+          {["✓ 100% free","✓ No ads","✓ Works offline"].map(t=>(
+            <span key={t} style={{fontSize:15,fontWeight:600,color:"#4A8EC2",letterSpacing:.2}}>{t}</span>
+          ))}
+        </div>
+        <button onClick={onStart} style={{padding:"15px 40px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#4A8EC2,#5BA0D4)",color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(74,142,194,.3)"}}>Start learning Hindi →</button>
       </div>
     </div>
   );
