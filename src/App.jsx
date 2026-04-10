@@ -4,12 +4,12 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, on
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import ALL_CARDS from "./cards";
 
-const UI={en:{practice:"Practice",progress:"Progress",settings:"Settings",flipHint:"tap to flip · swipe ← →",hint:"Hint",gotIt:"Got it! →",still:"← Still learning",mastered:"Mastered",learning:"Learning",due:"Due",total:"Total",flips:"flips",done:"Target hit! ✨",example:"Example",play:"▶ Play",theme:"Appearance",autoPlay:"Auto-play sound",target:"Daily target",perDay:"/day",logout:"Log out",deleteAcc:"Delete account",deleteWarn:"Permanently deletes everything.",confirm:"Confirm delete",cancel:"Cancel",pw:"Password",mastery:"Overall mastery",week:"This week",levels:"Levels",cats:"Categories",pracDue:"Due cards",pracLearn:"Learning cards",pracAll:"Practice all",exit:"Exit",allDone:"All caught up!",back:"Back to categories",lang:"Interface language",shuffle:"Shuffle",replay:"Replay tutorial",new:"New",reviewing:"Reviewing",improving:"Improving",strong:"Strong",master:"Mastered",browseAll:"Browse all",dueNow:"due now",search:"Search cards...",fav:"Favourites",noResults:"No cards found"},de:{practice:"Übung",progress:"Fortschritt",settings:"Einstellungen",flipHint:"Tippen = umdrehen · Wischen ← →",hint:"Hinweis",gotIt:"Kann ich! →",still:"← Noch lernen",mastered:"Gemeistert",learning:"Am Lernen",due:"Fällig",total:"Gesamt",flips:"Karten",done:"Geschafft! ✨",example:"Beispiel",play:"▶",theme:"Aussehen",autoPlay:"Auto-Ton",target:"Tagesziel",perDay:"/Tag",logout:"Abmelden",deleteAcc:"Konto löschen",deleteWarn:"Löscht alles unwiderruflich.",confirm:"Endgültig löschen",cancel:"Abbrechen",pw:"Passwort",mastery:"Gesamtfortschritt",week:"Diese Woche",levels:"Stufen",cats:"Kategorien",pracDue:"Fällige Karten",pracLearn:"Lernkarten",pracAll:"Alle üben",exit:"Beenden",allDone:"Alles erledigt!",back:"Zurück",lang:"Sprache",shuffle:"Mischen",replay:"Tutorial wiederholen",new:"Neu",reviewing:"Wiederholung",improving:"Fortschritt",strong:"Sicher",master:"Gemeistert",browseAll:"Alle ansehen",dueNow:"fällig",search:"Karten suchen...",fav:"Favoriten",noResults:"Keine Karten gefunden"}};
+const UI={en:{practice:"Practice",progress:"Progress",settings:"Settings",flipHint:"tap to flip · swipe ← →",hint:"Hint",gotIt:"Got it! →",still:"← Still learning",mastered:"Mastered",learning:"Learning",due:"Due",total:"Total",flips:"flips",done:"Target hit! ✨",example:"Example",play:"▶ Play",theme:"Appearance",autoPlay:"Auto-play sound",target:"Daily target",perDay:"/day",logout:"Log out",deleteAcc:"Delete account",deleteWarn:"Permanently deletes everything.",confirm:"Confirm delete",cancel:"Cancel",pw:"Password",mastery:"Overall mastery",week:"This week",levels:"Levels",cats:"Categories",pracDue:"Due cards",pracLearn:"Learning cards",pracAll:"Practice all",exit:"Exit",allDone:"All caught up!",back:"Back to categories",lang:"Interface language",shuffle:"Shuffle",replay:"Replay tutorial",new:"New",reviewing:"Reviewing",improving:"Improving",strong:"Strong",master:"Mastered",browseAll:"Browse all",dueNow:"due now"},de:{practice:"Übung",progress:"Fortschritt",settings:"Einstellungen",flipHint:"Tippen = umdrehen · Wischen ← →",hint:"Hinweis",gotIt:"Kann ich! →",still:"← Noch lernen",mastered:"Gemeistert",learning:"Am Lernen",due:"Fällig",total:"Gesamt",flips:"Karten",done:"Geschafft! ✨",example:"Beispiel",play:"▶",theme:"Aussehen",autoPlay:"Auto-Ton",target:"Tagesziel",perDay:"/Tag",logout:"Abmelden",deleteAcc:"Konto löschen",deleteWarn:"Löscht alles unwiderruflich.",confirm:"Endgültig löschen",cancel:"Abbrechen",pw:"Passwort",mastery:"Gesamtfortschritt",week:"Diese Woche",levels:"Stufen",cats:"Kategorien",pracDue:"Fällige Karten",pracLearn:"Lernkarten",pracAll:"Alle üben",exit:"Beenden",allDone:"Alles erledigt!",back:"Zurück",lang:"Sprache",shuffle:"Mischen",replay:"Tutorial wiederholen",new:"Neu",reviewing:"Wiederholung",improving:"Fortschritt",strong:"Sicher",master:"Gemeistert",browseAll:"Alle ansehen",dueNow:"fällig"}};
 const CAT_DE={Numbers:"Zahlen","Family & People":"Familie","Body Parts":"Körperteile","Nature & Weather":"Natur & Wetter",Colors:"Farben","Food & Home":"Essen & Haus",Places:"Orte",Time:"Zeit",Emotions:"Gefühle",Adjectives:"Adjektive",Verbs:"Verben","Common Words":"Häufige Wörter",Sentences:"Sätze"};
 const CAT_EMOJI={Numbers:"🔢","Family & People":"👨‍👩‍👧","Body Parts":"🫳","Nature & Weather":"🌧️",Colors:"🎨","Food & Home":"🏠",Places:"📍",Time:"⏰",Emotions:"💛",Adjectives:"✨",Verbs:"🏃","Common Words":"💬",Sentences:"🗣️"};
 
 const CATEGORIES=["All",...Array.from(new Set(ALL_CARDS.map(c=>c.cat)))];
-const CC={Numbers:"#8B7355","Family & People":"#A0522D","Body Parts":"#CD853F","Nature & Weather":"#2E8B57",Colors:"#DAA520","Food & Home":"#6B8E23",Places:"#4682B4",Time:"#B8860B",Emotions:"#C97B84",Adjectives:"#5F9EA0",Verbs:"#7B68AE","Common Words":"#708090",Sentences:"#BC8F8F"};
+const CC={Numbers:"#E07850","Family & People":"#A070C0","Body Parts":"#D86888","Nature & Weather":"#50A8B8",Colors:"#C8A040","Food & Home":"#58B070",Places:"#5890D0",Time:"#D89050",Emotions:"#C86088",Adjectives:"#50A080",Verbs:"#8870B8","Common Words":"#6878C0",Sentences:"#D08058"};
 const LVL_C=["#D06060","#D89050","#C8A040","#80B050","#40A050"];
 const LVL_D=[0,48*36e5,96*36e5,7*864e5,30*864e5];
 function cleanForSpeech(t){return t.replace(/\s*\(.*?\)\s*/g," ").replace(/\n/g," ").trim();}
@@ -72,7 +72,7 @@ function LandingPage({onStart,onLogin}){
       </nav>
       <div className={`land-fade ${fadeIn?"in":""}`} style={{maxWidth:960,margin:"0 auto",padding:"40px 24px 0",display:"flex",flexDirection:"column",alignItems:"center"}}>
         <h1 style={{fontSize:"clamp(32px,6vw,56px)",fontWeight:900,textAlign:"center",lineHeight:1.1,color:"#1E1A20",maxWidth:640,letterSpacing:"-1.5px"}}>
-          Learn Hindi faster with<br/><span style={{color:"#4A8EC2"}}>smart flashcards</span>
+          Build your Hindi vocabulary<br/>efficiently with <span style={{color:"#4A8EC2"}}>smart flashcards</span>
         </h1>
         <p style={{fontSize:"clamp(16px,2.5vw,19px)",color:"#58505E",textAlign:"center",maxWidth:500,lineHeight:1.6,marginTop:16,fontWeight:400}}>
           {ALL_CARDS.length} cards across 13 categories. Audio pronunciation, spaced repetition, and memory tricks designed for German speakers.
@@ -111,6 +111,11 @@ function LandingPage({onStart,onLogin}){
           </div>
         </div>
       </div>
+      <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".3s",display:"flex",justifyContent:"center",gap:20,flexWrap:"wrap",padding:"10px 24px 0"}}>
+          {["✓ 100% free","✓ No ads","✓ Works offline"].map(t=>(
+            <span key={t} style={{fontSize:15,fontWeight:600,color:"#4A8EC2",letterSpacing:.2}}>{t}</span>
+          ))}
+      </div>
       {/* ——— Features grid ——— */}
       <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".4s",maxWidth:840,margin:"0 auto",padding:"30px 24px 40px"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:14}}>
@@ -123,13 +128,8 @@ function LandingPage({onStart,onLogin}){
           ))}
         </div>
       </div>
-      {/* ——— Trust signals + bottom CTA ——— */}
+      {/* ——— Bottom CTA ——— */}
       <div className={`land-fade ${fadeIn?"in":""}`} style={{transitionDelay:".5s",textAlign:"center",padding:"20px 24px 50px"}}>
-        <div style={{display:"flex",justifyContent:"center",gap:20,flexWrap:"wrap",marginBottom:22}}>
-          {["✓ 100% free","✓ No ads","✓ Works offline"].map(t=>(
-            <span key={t} style={{fontSize:15,fontWeight:600,color:"#4A8EC2",letterSpacing:.2}}>{t}</span>
-          ))}
-        </div>
         <button onClick={onStart} style={{padding:"15px 40px",borderRadius:16,border:"none",background:"linear-gradient(135deg,#4A8EC2,#5BA0D4)",color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:"pointer",boxShadow:"0 4px 20px rgba(74,142,194,.3)"}}>Start learning Hindi →</button>
       </div>
     </div>
@@ -197,9 +197,9 @@ export default function App(){
   const[showTutorial,setShowTutorial]=useState(false);const[lang,setLang]=useState("en");
   const[shuffled,setShuffled]=useState(false);const[shuffledCards,setShuffledCards]=useState([]);
   const[showNamaste,setShowNamaste]=useState(false);
+  const[favourites,setFavourites]=useState(new Set());
+  const[searchQ,setSearchQ]=useState("");
   const[authMode,setAuthMode]=useState(null); // null=landing, "signup", "login"
-  const[searchQuery,setSearchQuery]=useState("");
-  const[favorites,setFavorites]=useState(new Set());
   // New toggle states for card back info panels
   const[showLatin,setShowLatin]=useState(false);
   const[showGender,setShowGender]=useState(false);
@@ -212,6 +212,7 @@ export default function App(){
   const T=dark?TD:TL;const u=UI[lang]||UI.en;const today=new Date().toISOString().slice(0,10);
   const lvlNames=[u.new,u.reviewing,u.improving,u.strong,u.master];
 
+  const toggleFav=useCallback((id)=>{setFavourites(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});},[]);
   const knownSet=useMemo(()=>new Set(Object.entries(cardLevels).filter(([,v])=>v.level>=5).map(([k])=>+k)),[cardLevels]);
   const learningSet=useMemo(()=>new Set(Object.entries(cardLevels).filter(([,v])=>v.level>=2&&v.level<5).map(([k])=>+k)),[cardLevels]);
   const dueCards=useMemo(()=>ALL_CARDS.filter(c=>isDue(cardLevels,c.id)),[cardLevels]);
@@ -219,11 +220,10 @@ export default function App(){
   const baseCards=useMemo(()=>{
     if(practiceMode==="learning")return ALL_CARDS.filter(c=>{const l=getLevel(cardLevels,c.id).level;return l>=2&&l<5&&isDue(cardLevels,c.id);});
     if(practiceMode==="due")return dueCards;
-    if(activeCategory==="__fav__")return ALL_CARDS.filter(c=>favorites.has(c.id));
     if(activeCategory==="All")return ALL_CARDS;
     if(activeCategory)return ALL_CARDS.filter(c=>c.cat===activeCategory);
     return[];
-  },[activeCategory,practiceMode,cardLevels,dueCards,favorites]);
+  },[activeCategory,practiceMode,cardLevels,dueCards]);
 
   const cards=shuffled?shuffledCards:baseCards;
   const card=cards[idx]||cards[0];const color=CC[card?.cat]||"#4A8EC2";
@@ -254,12 +254,12 @@ export default function App(){
   // Reset info toggles when card changes
   useEffect(()=>{setShowLatin(false);setShowGender(false);setShowPlural(false);},[idx]);
 
-  useEffect(()=>{const unsub=onAuthStateChanged(auth,async usr=>{setUser(usr);if(usr){const d=await loadData(usr.uid);if(d){setCardLevels(d.cardLevels||{});setUserName(d.name||"");setStats(d.stats||{totalMinutes:0,dailyLog:{},dailyTarget:25});setTodayFlips(d.stats?.dailyLog?.[today]||0);setLang(d.lang||"en");if(d.favorites)setFavorites(new Set(d.favorites));if(d.showTutorial)setShowTutorial(true);}setShowNamaste(true);}setAuthLoading(false);});return()=>unsub();},[]);
+  useEffect(()=>{const unsub=onAuthStateChanged(auth,async usr=>{setUser(usr);if(usr){const d=await loadData(usr.uid);if(d){setCardLevels(d.cardLevels||{});setUserName(d.name||"");setStats(d.stats||{totalMinutes:0,dailyLog:{},dailyTarget:25});setTodayFlips(d.stats?.dailyLog?.[today]||0);setLang(d.lang||"en");if(d.favourites)setFavourites(new Set(d.favourites));if(d.showTutorial)setShowTutorial(true);}setShowNamaste(true);}setAuthLoading(false);});return()=>unsub();},[]);
 
   useEffect(()=>{if(!user)return;const iv=setInterval(()=>{if(Date.now()-lastActivity.current<60000){const el=(Date.now()-sessionStart.current)/60000;if(el>0&&el<2)setStats(p=>({...p,totalMinutes:(p.totalMinutes||0)+el}));}sessionStart.current=Date.now();},30000);return()=>clearInterval(iv);},[user]);
 
   const saveTimeout=useRef(null);
-  useEffect(()=>{if(!user)return;if(saveTimeout.current)clearTimeout(saveTimeout.current);saveTimeout.current=setTimeout(async()=>{setSaving(true);await saveData(user.uid,{name:userName,cardLevels,stats,lang,favorites:[...favorites],showTutorial:false});setSaving(false);},1000);return()=>{if(saveTimeout.current)clearTimeout(saveTimeout.current);};},[cardLevels,user,userName,stats,lang,favorites]);
+  useEffect(()=>{if(!user)return;if(saveTimeout.current)clearTimeout(saveTimeout.current);saveTimeout.current=setTimeout(async()=>{setSaving(true);await saveData(user.uid,{name:userName,cardLevels,stats,lang,showTutorial:false,favourites:[...favourites]});setSaving(false);},1000);return()=>{if(saveTimeout.current)clearTimeout(saveTimeout.current);};},[cardLevels,user,userName,stats,lang,favourites]);
 
   const prevFlipped=useRef(false);
   useEffect(()=>{if(flipped&&!prevFlipped.current){setTodayFlips(f=>f+1);setStats(p=>({...p,dailyLog:{...p.dailyLog,[today]:(p.dailyLog?.[today]||0)+1}}));if(autoSpeak&&supported&&card)setTimeout(()=>speak(card.back,.82,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,today]);
@@ -280,11 +280,8 @@ export default function App(){
   const displayName=userName||user?.email?.split("@")[0]||"Learner";
   const jumpToCard=id=>{setPracticeMode(null);setActiveCategory("All");setShuffled(false);setFlipped(false);setShowHint(false);stop();const i=ALL_CARDS.findIndex(c=>c.id===id);if(i>=0)setIdx(i);setShowList(null);setTab("practice");};
   const exitPractice=()=>{setPracticeMode(null);setActiveCategory(null);setShuffled(false);setIdx(0);setFlipped(false);setShowHint(false);};
-  const goBackToGrid=()=>{setActiveCategory(null);setShuffled(false);setIdx(0);setFlipped(false);setShowHint(false);stop();setSearchQuery("");};
-  const toggleFav=useCallback((id)=>{setFavorites(prev=>{const n=new Set(prev);if(n.has(id))n.delete(id);else n.add(id);return n;});},[]);
-  const favCards=useMemo(()=>ALL_CARDS.filter(c=>favorites.has(c.id)),[favorites]);
-  const searchResults=useMemo(()=>{if(!searchQuery.trim())return[];const q=searchQuery.toLowerCase();return ALL_CARDS.filter(c=>c.front.toLowerCase().includes(q)||c.frontDe.toLowerCase().includes(q)||c.back.includes(q)||c.tl.toLowerCase().includes(q));},[searchQuery]);
-  const enterCategory=cat=>{setActiveCategory(cat);setIdx(0);setFlipped(false);setShowHint(false);setSearchQuery("");
+  const goBackToGrid=()=>{setActiveCategory(null);setShuffled(false);setIdx(0);setFlipped(false);setShowHint(false);stop();};
+  const enterCategory=cat=>{setActiveCategory(cat);setIdx(0);setFlipped(false);setShowHint(false);
     const catCards=cat==="All"?ALL_CARDS:ALL_CARDS.filter(c=>c.cat===cat);
     setShuffledCards(shuffleArr(catCards));setShuffled(true);
   };
@@ -326,21 +323,17 @@ export default function App(){
       {showTutorial&&<TutorialModal T={T} onDone={closeTutorial}/>}
 
       {showList&&<div style={{position:"fixed",inset:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.4)",padding:20}} onClick={()=>setShowList(null)}><div onClick={e=>e.stopPropagation()} style={{background:T.overlayBg,borderRadius:24,padding:"24px 20px",width:"100%",maxWidth:440,maxHeight:"85vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.2)"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><h2 style={{fontSize:20,fontWeight:800,color:T.text,margin:0}}>{showList==="known"?`⭐ ${u.mastered}`:`📖 ${u.learning}`} ({(showList==="known"?knownSet:learningSet).size})</h2><button onClick={()=>setShowList(null)} style={{width:34,height:34,borderRadius:"50%",border:`1px solid ${T.pillBd}`,background:T.btnBg,color:T.btnTx,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>
-        {ALL_CARDS.filter(c=>(showList==="known"?knownSet:learningSet).has(c.id)).map(c=>{const lv=getLevel(cardLevels,c.id);const front=lang==="de"?(c.frontDe||c.front):c.front;return(<button key={c.id} onClick={()=>jumpToCard(c.id)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 14px",borderRadius:14,border:`1px solid ${T.pillBd}`,background:T.pillBg,marginBottom:6,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}><div><div style={{fontSize:15,fontWeight:700,color:T.text}}>{front}</div><div style={{fontSize:13,color:CC[c.cat],fontWeight:600,marginTop:1}}>{c.back} · {c.tl}</div></div><span style={{fontSize:10,fontWeight:700,color:LVL_C[lv.level-1],background:`${LVL_C[lv.level-1]}15`,padding:"2px 7px",borderRadius:6}}>Lv{lv.level}</span></button>);})}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><h2 style={{fontSize:20,fontWeight:800,color:T.text,margin:0}}>{showList==="known"?"🏆 "+(lang==="de"?"Gemeistert":"Nailed"):showList==="favourites"?"⭐ "+(lang==="de"?"Favoriten":"Favourites"):"📖 "+(lang==="de"?"In Arbeit":"In Progress")} ({(showList==="known"?knownSet:showList==="favourites"?favourites:learningSet).size})</h2><button onClick={()=>setShowList(null)} style={{width:34,height:34,borderRadius:"50%",border:`1px solid ${T.pillBd}`,background:T.btnBg,color:T.btnTx,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>
+        {ALL_CARDS.filter(c=>(showList==="known"?knownSet:showList==="favourites"?favourites:learningSet).has(c.id)).map(c=>{const lv=getLevel(cardLevels,c.id);const front=lang==="de"?(c.frontDe||c.front):c.front;return(<button key={c.id} onClick={()=>jumpToCard(c.id)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 14px",borderRadius:14,border:`1px solid ${T.pillBd}`,background:T.pillBg,marginBottom:6,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}><div><div style={{fontSize:15,fontWeight:700,color:T.text}}>{front}</div><div style={{fontSize:13,color:CC[c.cat],fontWeight:600,marginTop:1}}>{c.back} · {c.tl}</div></div><span style={{fontSize:10,fontWeight:700,color:LVL_C[lv.level-1],background:`${LVL_C[lv.level-1]}15`,padding:"2px 7px",borderRadius:6}}>Lv{lv.level}</span></button>);})}
       </div></div>}
 
       <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:560}}>
         {tab==="practice"&&<>
-          <div style={{marginBottom:10}}><div style={{fontSize:12,letterSpacing:3,color:T.accent,fontWeight:700,marginBottom:2,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी सीखें</div><h1 style={{fontSize:22,fontWeight:800,margin:0,color:T.text}}>Namaste, {displayName}!</h1></div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10,gap:10}}><div><div style={{fontSize:12,letterSpacing:3,color:T.accent,fontWeight:700,marginBottom:2,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी सीखें</div><h1 style={{fontSize:22,fontWeight:800,margin:0,color:T.text}}>Namaste, {displayName}!</h1></div><div style={{position:"relative",flexShrink:0,marginTop:6}}><input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder={lang==="de"?"Suchen...":"Search..."} style={{width:140,padding:"8px 12px 8px 32px",borderRadius:12,border:`1.5px solid ${T.pillBd}`,background:T.pillBg,color:T.text,fontSize:13,fontFamily:"inherit",outline:"none"}}/><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:14,color:T.muted,pointerEvents:"none"}}>🔍</span></div></div>
           <div style={{marginBottom:10,padding:"10px 14px",borderRadius:14,background:T.pillBg,border:`1px solid ${T.pillBd}`,boxShadow:T.catCardShadow}}><div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:4}}><span style={{fontWeight:600,color:T.text}}>🎯 {todayFlips}/{dailyTarget} {u.flips}</span><span style={{fontWeight:700,color:targetPct>=100?"#40A050":T.accent}}>{targetPct>=100?u.done:`${targetPct}%`}</span></div><div style={{height:5,borderRadius:3,background:T.dotBg,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${targetPct}%`,background:targetPct>=100?"linear-gradient(90deg,#40A050,#80B050)":"linear-gradient(90deg,#D06060,#C8A040)",transition:"width .4s"}}/></div></div>
           {practiceMode&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 14px",borderRadius:12,background:"#C8A04014",border:"1.5px solid #C8A04030",marginBottom:8}}><span style={{fontSize:13,fontWeight:700,color:"#C8A040"}}>🎯 {practiceMode==="learning"?u.pracLearn:u.pracDue}: {cards.length}</span><button onClick={exitPractice} style={{padding:"5px 10px",borderRadius:10,border:"1px solid #C8A04040",background:"transparent",color:"#C8A040",fontSize:11,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>{u.exit}</button></div>}
 
           {!inCardView&&<>
-            {/* ——— Search bar ——— */}
-            <div style={{marginBottom:12,position:"relative"}}><input type="text" placeholder={`🔍 ${u.search}`} value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} style={{width:"100%",padding:"12px 16px 12px 16px",borderRadius:16,border:`1.5px solid ${T.inputBd}`,background:T.inputBg,color:T.text,fontSize:15,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}}/>{searchQuery&&<button onClick={()=>setSearchQuery("")} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:T.muted,fontSize:16,cursor:"pointer",padding:4}}>✕</button>}</div>
-            {searchQuery.trim()&&<div style={{marginBottom:14}}>{searchResults.length===0?<div style={{textAlign:"center",padding:20,color:T.muted}}>{u.noResults}</div>:searchResults.slice(0,20).map(c=>{const front=lang==="de"?(c.frontDe||c.front):c.front;const isFav=favorites.has(c.id);return(<button key={c.id} onClick={()=>{jumpToCard(c.id);setSearchQuery("");}} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 14px",borderRadius:14,border:`1px solid ${T.pillBd}`,background:T.pillBg,marginBottom:6,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}><div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:T.text}}>{front}</div><div style={{fontSize:13,color:CC[c.cat],fontWeight:600,marginTop:1}}>{c.back} · {c.tl}</div></div><button onClick={e=>{e.stopPropagation();toggleFav(c.id);}} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",padding:4,color:isFav?"#E25555":"#CCC"}}>{isFav?"❤️":"🤍"}</button></button>);})}</div>}
-            {!searchQuery.trim()&&<>
             {/* ——— Top action: Browse All + Due ——— */}
             <div style={{display:"flex",gap:10,marginBottom:10}}>
               <button onClick={()=>enterCategory("All")} style={{flex:1,padding:"16px 14px",borderRadius:18,border:`1.5px solid ${T.accent}30`,background:`${T.accent}08`,cursor:"pointer",fontFamily:"inherit",display:"flex",flexDirection:"column",alignItems:"center",gap:4,boxShadow:T.catCardShadow}}>
@@ -354,22 +347,16 @@ export default function App(){
                 <span style={{fontSize:12,color:T.muted,fontWeight:500}}>{lang==="de"?"Jetzt üben":"Practice now"} · 🔀</span>
               </button>}
             </div>
-            {/* ——— Favourites section ——— */}
-            {favCards.length>0&&<button onClick={()=>{setActiveCategory("__fav__");setIdx(0);setFlipped(false);setShowHint(false);const fc=ALL_CARDS.filter(c=>favorites.has(c.id));setShuffledCards(shuffleArr(fc));setShuffled(true);}} style={{width:"100%",padding:"14px",borderRadius:18,border:"1.5px solid #E2555530",background:"#E2555508",cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:10,marginBottom:12,boxShadow:T.catCardShadow}}>
-              <span style={{fontSize:22}}>❤️</span>
-              <div style={{textAlign:"left"}}><div style={{fontSize:15,fontWeight:700,color:"#E25555"}}>{u.fav}</div><div style={{fontSize:12,color:T.muted}}>{favCards.length} {lang==="de"?"Karten":"cards"}</div></div>
-            </button>}
-            <div style={{fontSize:13,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:1.5,marginBottom:8,padding:"0 2px"}}>{u.cats}</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:14}}>
-              {CATEGORIES.filter(c=>c!=="All").map(cat=>{const cc=CC[cat]||T.accent;const catCards=ALL_CARDS.filter(c=>c.cat===cat);const mastered=catCards.filter(c=>getLevel(cardLevels,c.id).level>=5).length;const due=catCards.filter(c=>isDue(cardLevels,c.id)).length;const pctCat=catCards.length?Math.round((mastered/catCards.length)*100):0;return(<button key={cat} onClick={()=>enterCategory(cat)} style={{padding:"16px 14px",borderRadius:18,border:`1px solid ${T.catCardBd}`,background:T.catCardBg,boxShadow:T.catCardShadow,cursor:"pointer",textAlign:"left",fontFamily:"inherit",display:"flex",flexDirection:"column",gap:6,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:0,left:0,right:0,height:3,background:cc}}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:22}}>{CAT_EMOJI[cat]||"📁"}</span><span style={{fontSize:10,fontWeight:600,color:T.muted}}>{catCards.length}</span></div><div style={{fontSize:15,fontWeight:700,color:T.text}}>{catName(cat)}</div><div style={{height:4,borderRadius:2,background:T.dotBg,overflow:"hidden"}}><div style={{height:"100%",borderRadius:2,width:`${pctCat}%`,background:cc}}/></div><div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:T.muted}}><span>{mastered}/{catCards.length} ⭐</span>{due>0&&<span style={{color:"#D06060",fontWeight:600}}>{due} {u.dueNow}</span>}</div></button>);})}
+            <div style={{fontSize:13,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:1.5,marginBottom:6,padding:"0 2px"}}>{u.cats}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,marginBottom:10}}>
+              {CATEGORIES.filter(c=>c!=="All").filter(cat=>!searchQ||catName(cat).toLowerCase().includes(searchQ.toLowerCase())||ALL_CARDS.filter(c=>c.cat===cat).some(c=>{const q=searchQ.toLowerCase();return c.front.toLowerCase().includes(q)||c.back.includes(q)||(c.frontDe||"").toLowerCase().includes(q)||(c.tl||"").toLowerCase().includes(q);})).map(cat=>{const cc=CC[cat]||T.accent;const catCards=ALL_CARDS.filter(c=>c.cat===cat);const mastered=catCards.filter(c=>getLevel(cardLevels,c.id).level>=5).length;const due=catCards.filter(c=>isDue(cardLevels,c.id)).length;const pctCat=catCards.length?Math.round((mastered/catCards.length)*100):0;return(<button key={cat} onClick={()=>enterCategory(cat)} style={{padding:"14px 12px",borderRadius:16,border:`1px solid ${T.catCardBd}`,background:T.catCardBg,boxShadow:T.catCardShadow,cursor:"pointer",textAlign:"left",fontFamily:"inherit",display:"flex",flexDirection:"column",gap:6,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:0,left:0,right:0,height:3,background:cc}}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:26}}>{CAT_EMOJI[cat]||"📁"}</span><span style={{fontSize:11,fontWeight:600,color:T.muted}}>{catCards.length}</span></div><div style={{fontSize:17,fontWeight:700,color:T.text}}>{catName(cat)}</div><div style={{height:4,borderRadius:2,background:T.dotBg,overflow:"hidden"}}><div style={{height:"100%",borderRadius:2,width:`${pctCat}%`,background:cc}}/></div><div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:T.muted}}><span>{mastered}/{catCards.length} ⭐</span>{due>0&&<span style={{color:"#D06060",fontWeight:600}}>{due} {u.dueNow}</span>}</div></button>);})}
             </div>
 
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,padding:"10px 0",borderTop:`1px solid ${T.divider}`}}>{[{l:u.mastered,v:knownSet.size,c:"#40A050",cl:()=>setShowList("known")},{l:u.learning,v:learningSet.size,c:"#C8A040",cl:()=>setShowList("learning")},{l:u.due,v:dueCards.length,c:"#D06060",cl:()=>{setPracticeMode("due");setShuffledCards(shuffleArr(dueCards));setShuffled(true);setIdx(0);}}].map(s=>(<div key={s.l} onClick={s.cl} style={{textAlign:"center",padding:"8px 4px",borderRadius:12,background:T.pillBg,border:`1px solid ${T.pillBd}`,cursor:"pointer",boxShadow:T.catCardShadow}}><div style={{fontSize:20,fontWeight:800,color:s.c}}>{s.v}</div><div style={{fontSize:10,color:T.muted,fontWeight:600,textTransform:"uppercase"}}>{s.l}</div></div>))}</div>
-            </>}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,padding:"10px 0",borderTop:`1px solid ${T.divider}`}}>{[{l:lang==="de"?"Favoriten":"Favourites",i:"⭐",v:favourites.size,c:T.accent,cl:()=>setShowList("favourites")},{l:lang==="de"?"In Arbeit":"In Progress",i:"📖",v:learningSet.size,c:"#C8A040",cl:()=>setShowList("learning")},{l:lang==="de"?"Gemeistert":"Nailed",i:"🏆",v:knownSet.size,c:"#40A050",cl:()=>setShowList("known")},{l:lang==="de"?"Fällig":"Due",i:"🔥",v:dueCards.length,c:"#D06060",cl:()=>{setPracticeMode("due");setShuffledCards(shuffleArr(dueCards));setShuffled(true);setIdx(0);}}].map(s=>(<div key={s.l} onClick={s.cl} style={{textAlign:"center",padding:"8px 4px",borderRadius:12,background:T.pillBg,border:`1px solid ${T.pillBd}`,cursor:"pointer",boxShadow:T.catCardShadow}}><div style={{fontSize:16,marginBottom:2}}>{s.i}</div><div style={{fontSize:18,fontWeight:800,color:s.c}}>{s.v}</div><div style={{fontSize:9,color:T.muted,fontWeight:600,textTransform:"uppercase"}}>{s.l}</div></div>))}</div>
           </>}
 
           {inCardView&&cards.length>0&&<>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><button onClick={practiceMode?exitPractice:goBackToGrid} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 12px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:T.pillBg,color:T.sub,fontSize:13,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>← {u.back}</button><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:13,color,fontWeight:700}}>{!practiceMode&&activeCategory!=="All"&&activeCategory!=="__fav__"?catName(activeCategory)+" · ":""}{activeCategory==="__fav__"?(u.fav+" · "):""}{idx+1}/{cards.length}</span><button onClick={doShuffle} style={{padding:"6px 12px",borderRadius:12,border:`1.5px solid ${T.accent}40`,background:`${T.accent}12`,color:T.accent,fontSize:12,fontFamily:"inherit",fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>🔀 {u.shuffle}</button></div></div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><button onClick={practiceMode?exitPractice:goBackToGrid} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 12px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:T.pillBg,color:T.sub,fontSize:13,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>← {u.back}</button><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:13,color,fontWeight:700}}>{!practiceMode&&activeCategory!=="All"?catName(activeCategory)+" · ":""}{idx+1}/{cards.length}</span><button onClick={doShuffle} style={{padding:"6px 12px",borderRadius:12,border:`1.5px solid ${T.accent}40`,background:`${T.accent}12`,color:T.accent,fontSize:12,fontFamily:"inherit",fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>🔀 {u.shuffle}</button></div></div>
             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6,padding:"0 2px"}}><div style={{display:"flex",gap:3}}>{[1,2,3,4,5].map(l=>(<div key={l} style={{width:8,height:8,borderRadius:"50%",background:cl.level>=l?LVL_C[l-1]:T.dotBg}}/>))}</div><span style={{fontSize:12,fontWeight:700,color:LVL_C[cl.level-1]}}>{lvlNames[cl.level-1]}</span></div>
 
             <div {...swipe} onClick={doFlip} style={{perspective:1200,cursor:"pointer",marginBottom:8,height:450,position:"relative"}}>
@@ -385,10 +372,8 @@ export default function App(){
                 </div>
                 {/* ——— BACK SIDE ——— */}
                 <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",transform:"rotateY(180deg)",borderRadius:24,background:dark?`linear-gradient(155deg,${color}10,#1A1620 25%,#161420)`:`linear-gradient(155deg,${color}06,#FFF 25%,#F8F6F3)`,border:`1px solid ${color}${dark?"28":"14"}`,display:"flex",flexDirection:"column",alignItems:"center",padding:"12px 14px",boxShadow:T.cardShadow,overflowY:"auto",justifyContent:"flex-start",paddingTop:32}}>
-                  <div style={{position:"absolute",top:10,right:14,display:"flex",alignItems:"center",gap:8}}>
-                    <button onClick={e=>{e.stopPropagation();if(card)toggleFav(card.id);}} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",padding:2,color:card&&favorites.has(card.id)?"#E25555":"#CCC"}}>{card&&favorites.has(card.id)?"❤️":"🤍"}</button>
-                    <span style={{fontSize:11,color,letterSpacing:1.5,textTransform:"uppercase",fontWeight:700,opacity:.7,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी</span>
-                  </div>
+                  <div style={{position:"absolute",top:10,right:14,fontSize:11,color,letterSpacing:1.5,textTransform:"uppercase",fontWeight:700,opacity:.7,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिन्दी</div>
+                  <button onClick={e=>{e.stopPropagation();if(card)toggleFav(card.id);}} style={{position:"absolute",top:8,left:14,fontSize:20,background:"none",border:"none",cursor:"pointer",padding:4,opacity:card&&favourites.has(card.id)?1:.4}}>{card&&favourites.has(card.id)?"⭐":"☆"}</button>
                   {/* Hindi word */}
                   <div style={{fontFamily:"'Noto Sans Devanagari',sans-serif",fontSize:card?.back.length>14?28:46,fontWeight:700,textAlign:"center",color:T.text,lineHeight:1.3,whiteSpace:"pre-line"}}>{card?.back}</div>
                   {/* Audio controls */}
