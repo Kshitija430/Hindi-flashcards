@@ -11,8 +11,65 @@ const CAT_EMOJI={Numbers:"🔢","Family & People":"👨‍👩‍👧","Body Par
 const CATEGORIES=["All",...Array.from(new Set(ALL_CARDS.map(c=>c.cat)))];
 const CC={Numbers:"#8B7355","Family & People":"#A0522D","Body Parts":"#CD853F","Nature & Weather":"#2E8B57",Colors:"#DAA520","Food & Home":"#6B8E23",Places:"#4682B4",Time:"#B8860B",Emotions:"#C97B84",Adjectives:"#5F9EA0",Verbs:"#7B68AE","Common Words":"#708090",Sentences:"#BC8F8F"};
 const LVL_C=["#D06060","#D89050","#C8A040","#80B050","#40A050"];
-const LVL_D=[0,48*36e5,96*36e5,7*864e5,30*864e5];
+// ——— SPACED REPETITION: Interval per level in ms ———
+// Level 1 = 0 (review immediately), Level 2 = 48h, Level 3 = 96h, Level 4 = 7d, Level 5 = 30d
+const LVL_INTERVALS=[0,48*36e5,96*36e5,7*864e5,30*864e5];
+const LVL_LABELS_SHORT=["now","48h","96h","7d","30d"];
 function cleanForSpeech(t){return t.replace(/\s*\(.*?\)\s*/g," ").replace(/\n/g," ").trim();}
+
+// Get card data: {level, lastReviewedAt, nextReviewAt}
+function getLevel(cl,id){
+  const d=cl[id];
+  if(!d)return{level:1,lastReviewedAt:null,nextReviewAt:null};
+  // Migration: old format had lastCorrect instead of lastReviewedAt
+  if(d.lastCorrect&&!d.lastReviewedAt)return{level:d.level||1,lastReviewedAt:d.lastCorrect,nextReviewAt:d.nextReviewAt||null};
+  return{level:d.level||1,lastReviewedAt:d.lastReviewedAt||null,nextReviewAt:d.nextReviewAt||null};
+}
+
+// Check if card is due: nextReviewAt <= now (or never reviewed / level 1)
+function isDue(cl,id,timeOffset=0){
+  const c=getLevel(cl,id);
+  if(c.level<=1||!c.nextReviewAt)return true;
+  return(Date.now()+timeOffset)>=new Date(c.nextReviewAt).getTime();
+}
+
+// Correct answer: level+1, schedule next review
+function lvlUp(cl,id,timeOffset=0){
+  const c=getLevel(cl,id);
+  const newLevel=Math.min(c.level+1,5);
+  const now=new Date(Date.now()+timeOffset);
+  const interval=LVL_INTERVALS[newLevel-1];
+  const nextReview=new Date(now.getTime()+interval);
+  console.log(`%c✅ CORRECT: Card ${id} — Lv${c.level}→Lv${newLevel} | Next review: ${interval===0?"now":LVL_LABELS_SHORT[newLevel-1]} (${nextReview.toLocaleString()})`,"color:#40A050;font-weight:bold");
+  return{...cl,[id]:{level:newLevel,lastReviewedAt:now.toISOString(),nextReviewAt:nextReview.toISOString()}};
+}
+
+// Incorrect answer: level-1, schedule next review
+function lvlDown(cl,id,timeOffset=0){
+  const c=getLevel(cl,id);
+  const newLevel=Math.max(c.level-1,1);
+  const now=new Date(Date.now()+timeOffset);
+  const interval=LVL_INTERVALS[newLevel-1];
+  const nextReview=new Date(now.getTime()+interval);
+  console.log(`%c❌ INCORRECT: Card ${id} — Lv${c.level}→Lv${newLevel} | Next review: ${interval===0?"now":LVL_LABELS_SHORT[newLevel-1]} (${nextReview.toLocaleString()})`,"color:#D06060;font-weight:bold");
+  return{...cl,[id]:{level:newLevel,lastReviewedAt:now.toISOString(),nextReviewAt:nextReview.toISOString()}};
+}
+
+// Format relative time for display
+function fmtRelTime(iso,timeOffset=0){
+  if(!iso)return"—";
+  const d=new Date(iso).getTime();
+  const now=Date.now()+timeOffset;
+  const diff=d-now;
+  if(diff<=0)return"Now";
+  const h=Math.floor(diff/36e5);
+  if(h<1)return`${Math.ceil(diff/60000)}m`;
+  if(h<48)return`${h}h`;
+  const days=Math.floor(h/24);
+  return`${days}d`;
+}
+
+function shuffleArr(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
 
 const TL={bgGrad:"linear-gradient(155deg,#F6F9FC 0%,#F0F3F8 30%,#EAF0F6 55%,#E6F0F4 75%,#F2F6FA 100%)",cardFront:"linear-gradient(155deg,#FFF,#FBFDFF 40%,#F6F9FE 70%,#F4F8FC)",text:"#1E1A20",sub:"#58505E",muted:"#908898",faint:"#C8C0D0",hintBg:"rgba(160,112,192,.06)",hintBd:"rgba(160,112,192,.15)",hintTx:"#5E4878",trickBg:"rgba(88,176,112,.06)",trickBd:"rgba(88,176,112,.16)",trickTx:"#38784A",pillBg:"#FFF",pillBd:"rgba(0,0,0,.06)",btnBg:"#FFF",btnBd:"rgba(0,0,0,.08)",btnTx:"#78708A",dotBg:"rgba(0,0,0,.07)",divider:"rgba(0,0,0,.06)",cardShadow:"0 8px 32px rgba(30,20,40,.06),0 2px 8px rgba(0,0,0,.03)",accent:"#4A8EC2",pronBg:"rgba(74,142,194,.06)",pronBd:"rgba(74,142,194,.16)",speedBg:"rgba(74,142,194,.04)",speedBd:"rgba(74,142,194,.10)",speedActive:"rgba(74,142,194,.12)",inputBg:"#FFF",inputBd:"rgba(0,0,0,.10)",overlayBg:"rgba(244,248,252,.98)",tabBg:"#FFF",tabBd:"rgba(0,0,0,.06)",barFill:"#4A8EC2",exBg:"rgba(80,168,184,.05)",exBd:"rgba(80,168,184,.14)",exTx:"#28708A",catCardBg:"#FFF",catCardBd:"rgba(0,0,0,.05)",catCardShadow:"0 2px 12px rgba(0,0,0,.04)"};
 const TD={bgGrad:"linear-gradient(155deg,#10141A 0%,#121824 30%,#101418 55%,#121620 75%,#141820 100%)",cardFront:"linear-gradient(155deg,#182028,#161A24 40%,#141820)",text:"#EDE8F0",sub:"#8A8098",muted:"#585060",faint:"#383040",hintBg:"rgba(255,255,255,.04)",hintBd:"rgba(255,255,255,.08)",hintTx:"#8A8098",trickBg:"rgba(88,176,112,.08)",trickBd:"rgba(88,176,112,.14)",trickTx:"#78C098",pillBg:"rgba(255,255,255,.04)",pillBd:"rgba(255,255,255,.06)",btnBg:"rgba(255,255,255,.05)",btnBd:"rgba(255,255,255,.08)",btnTx:"#8A8098",dotBg:"rgba(255,255,255,.08)",divider:"rgba(255,255,255,.05)",cardShadow:"0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.03)",accent:"#6AAED8",pronBg:"rgba(106,174,216,.10)",pronBd:"rgba(106,174,216,.20)",speedBg:"rgba(255,255,255,.03)",speedBd:"rgba(255,255,255,.06)",speedActive:"rgba(106,174,216,.14)",inputBg:"rgba(255,255,255,.06)",inputBd:"rgba(255,255,255,.10)",overlayBg:"rgba(16,20,26,.98)",tabBg:"#161A24",tabBd:"rgba(255,255,255,.06)",barFill:"#6AAED8",exBg:"rgba(80,168,184,.08)",exBd:"rgba(80,168,184,.12)",exTx:"#78C0D0",catCardBg:"rgba(255,255,255,.04)",catCardBd:"rgba(255,255,255,.06)",catCardShadow:"0 2px 12px rgba(0,0,0,.2)"};
@@ -166,11 +223,7 @@ function TutorialModal({T,onDone}){const[s,setS]=useState(0);const t=TUTORIAL[s]
 function AuthScreen({T,onBack,initialMode}){const[isS,setIsS]=useState(initialMode==="signup");const[nm,setNm]=useState("");const[em,setEm]=useState("");const[pw,setPw]=useState("");const[err,setErr]=useState("");const[ld,setLd]=useState(false);const sub=async()=>{setErr("");if(isS&&!nm.trim()){setErr("Enter your name");return;}if(!em||!pw){setErr("Fill all fields");return;}if(pw.length<6){setErr("Min 6 chars");return;}setLd(true);try{if(isS){const c=await createUserWithEmailAndPassword(auth,em,pw);await setDoc(doc(db,"users",c.user.uid),{name:nm.trim(),cardLevels:{},stats:{totalMinutes:0,dailyLog:{},dailyTarget:25},lang:"en",showTutorial:true});}else await signInWithEmailAndPassword(auth,em,pw);}catch(e){setErr(e.code==="auth/invalid-credential"?"Invalid email/password.":e.code==="auth/email-already-in-use"?"Already registered.":e.message);}setLd(false);};const iS={width:"100%",padding:"14px 16px",borderRadius:14,border:`1.5px solid ${T.inputBd}`,background:T.inputBg,color:T.text,fontSize:16,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"};
 return(<div style={{minHeight:"100vh",background:T.bgGrad,fontFamily:"'Outfit',sans-serif",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",boxSizing:"border-box"}}><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/><div style={{width:"100%",maxWidth:400}}>{onBack&&<button onClick={onBack} style={{display:"flex",alignItems:"center",gap:4,padding:"8px 14px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:T.btnBg,color:T.sub,fontSize:13,fontFamily:"inherit",fontWeight:600,cursor:"pointer",marginBottom:28}}>← Back</button>}<div style={{textAlign:"center"}}><div style={{fontSize:15,letterSpacing:3,color:T.accent,fontWeight:700,marginBottom:6,fontFamily:"'Noto Sans Devanagari',sans-serif"}}>हिंदी सीखें</div><h1 style={{fontSize:30,fontWeight:800,margin:0,color:T.text}}>{isS?"Create your account":"Welcome back"}</h1>{isS&&<p style={{fontSize:14,color:T.muted,margin:"10px 0 0",lineHeight:1.5}}>Save your progress across devices and track your learning journey.</p>}<p style={{fontSize:15,color:T.sub,margin:"8px 0 24px"}}>{isS?"":"Log in to continue learning"}</p></div><div style={{display:"flex",flexDirection:"column",gap:12}}>{isS&&<input placeholder="Your name" value={nm} onChange={e=>setNm(e.target.value)} style={iS}/>}<input type="email" placeholder="Email" value={em} onChange={e=>setEm(e.target.value)} style={iS}/><PasswordInput value={pw} onChange={e=>setPw(e.target.value)} placeholder="Password (min 6)" onKeyDown={e=>e.key==="Enter"&&sub()} T={T}/>{err&&<div style={{padding:"10px",borderRadius:12,background:"#E8505014",border:"1px solid #E8505030",color:"#C03040",fontSize:13,textAlign:"left"}}>{err}</div>}<button onClick={sub} disabled={ld} style={{padding:"15px",borderRadius:16,border:"none",background:`linear-gradient(135deg,${T.accent},${T.accent}CC)`,color:"#FFF",fontSize:17,fontFamily:"inherit",fontWeight:700,cursor:ld?"wait":"pointer",opacity:ld?.7:1,boxShadow:`0 4px 16px ${T.accent}30`}}>{ld?"...":isS?"Create Account":"Log In"}</button><button onClick={()=>{setIsS(s=>!s);setErr("");}} style={{padding:"10px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:"transparent",color:T.sub,fontSize:14,fontFamily:"inherit",cursor:"pointer"}}>{isS?"Have account? Log in":"New? Sign up"}</button></div></div></div>);}
 
-function getLevel(cl,id){return cl[id]||{level:1,lastCorrect:null};}
-function isDue(cl,id){const c=getLevel(cl,id);if(!c.lastCorrect||c.level<=1)return true;return Date.now()-new Date(c.lastCorrect).getTime()>=LVL_D[Math.min(c.level-1,4)];}
-function lvlUp(cl,id){const c=getLevel(cl,id);return{...cl,[id]:{level:Math.min(c.level+1,5),lastCorrect:new Date().toISOString()}};}
-function lvlDown(cl,id){const c=getLevel(cl,id);return{...cl,[id]:{level:Math.max(c.level-1,1),lastCorrect:c.lastCorrect}};}
-function shuffleArr(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+// (spaced repetition functions defined above)
 
 // ——— NAMASTE ANIMATION (FIXED: uses array for multi-byte emoji) ———
 function NamasteAnim({name,T}){
@@ -201,6 +254,8 @@ export default function App(){
   const[authMode,setAuthMode]=useState(null); // null=landing, "signup", "login"
   const[searchQuery,setSearchQuery]=useState("");
   const[favorites,setFavorites]=useState(new Set());
+  const[timeOffset,setTimeOffset]=useState(0); // Debug: ms offset to simulate time
+  const[showSchedule,setShowSchedule]=useState(false); // Toggle review schedule on card front
   // New toggle states for card back info panels
   const[showLatin,setShowLatin]=useState(false);
   const[showGender,setShowGender]=useState(false);
@@ -215,16 +270,16 @@ export default function App(){
 
   const knownSet=useMemo(()=>new Set(Object.entries(cardLevels).filter(([,v])=>v.level>=5).map(([k])=>+k)),[cardLevels]);
   const learningSet=useMemo(()=>new Set(Object.entries(cardLevels).filter(([,v])=>v.level>=2&&v.level<5).map(([k])=>+k)),[cardLevels]);
-  const dueCards=useMemo(()=>ALL_CARDS.filter(c=>isDue(cardLevels,c.id)),[cardLevels]);
+  const dueCards=useMemo(()=>ALL_CARDS.filter(c=>isDue(cardLevels,c.id,timeOffset)),[cardLevels,timeOffset]);
 
   const baseCards=useMemo(()=>{
-    if(practiceMode==="learning")return ALL_CARDS.filter(c=>{const l=getLevel(cardLevels,c.id).level;return l>=2&&l<5&&isDue(cardLevels,c.id);});
+    if(practiceMode==="learning")return ALL_CARDS.filter(c=>{const l=getLevel(cardLevels,c.id).level;return l>=2&&l<5&&isDue(cardLevels,c.id,timeOffset);});
     if(practiceMode==="due")return dueCards;
     if(activeCategory==="__fav__")return ALL_CARDS.filter(c=>favorites.has(c.id));
     if(activeCategory==="All")return ALL_CARDS;
     if(activeCategory)return ALL_CARDS.filter(c=>c.cat===activeCategory);
     return[];
-  },[activeCategory,practiceMode,cardLevels,dueCards,favorites]);
+  },[activeCategory,practiceMode,cardLevels,dueCards,favorites,timeOffset]);
 
   const cards=shuffled?shuffledCards:baseCards;
   const card=cards[idx]||cards[0];const color=CC[card?.cat]||"#4A8EC2";
@@ -253,7 +308,7 @@ export default function App(){
   },[cardLevels,practiceMode,cards,idx]);
 
   // Reset info toggles when card changes
-  useEffect(()=>{setShowLatin(false);setShowGender(false);setShowPlural(false);},[idx]);
+  useEffect(()=>{setShowLatin(false);setShowGender(false);setShowPlural(false);setShowSchedule(false);},[idx]);
 
   useEffect(()=>{const unsub=onAuthStateChanged(auth,async usr=>{setUser(usr);if(usr){const d=await loadData(usr.uid);if(d){setCardLevels(d.cardLevels||{});setUserName(d.name||"");setStats(d.stats||{totalMinutes:0,dailyLog:{},dailyTarget:25});setTodayFlips(d.stats?.dailyLog?.[today]||0);setLang(d.lang||"en");if(d.favorites)setFavorites(new Set(d.favorites));if(d.showTutorial)setShowTutorial(true);}setShowNamaste(true);}setAuthLoading(false);});return()=>unsub();},[]);
 
@@ -269,8 +324,8 @@ export default function App(){
   const nav=useCallback(d=>{if(anim)return;setAnim(true);setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();markActive();setTimeout(()=>{setIdx(i=>{const n=i+d;return n<0?cards.length-1:n>=cards.length?0:n;});setAnim(false);},200);},[cards.length,anim,stop,markActive]);
 
   // DUE BUG FIX: track marked card id so useEffect can advance if card stays in list
-  const markKnow=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlUp(p,card.id));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop]);
-  const markLearn=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlDown(p,card.id));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop]);
+  const markKnow=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlUp(p,card.id,timeOffset));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop,timeOffset]);
+  const markLearn=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlDown(p,card.id,timeOffset));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop,timeOffset]);
 
   const onSwipeL=useCallback(()=>{setSwipeHint("left");setTimeout(()=>setSwipeHint(null),400);markLearn();},[markLearn]);
   const onSwipeR=useCallback(()=>{setSwipeHint("right");setTimeout(()=>setSwipeHint(null),400);markKnow();},[markKnow]);
@@ -321,7 +376,7 @@ export default function App(){
   return(
     <div style={{minHeight:"100vh",background:T.bgGrad,fontFamily:"'Outfit',sans-serif",color:T.text,display:"flex",flexDirection:"column",alignItems:"center",padding:"14px 14px 80px",boxSizing:"border-box",transition:"background .4s"}}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-      <style>{`@keyframes speakPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}@keyframes barBounce{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}@keyframes swL{0%{opacity:0;transform:translateX(20px)}50%{opacity:1}100%{opacity:0;transform:translateX(-20px)}}@keyframes swR{0%{opacity:0;transform:translateX(-20px)}50%{opacity:1}100%{opacity:0;transform:translateX(20px)}}@keyframes hintIn{from{opacity:0;max-height:0}to{opacity:1;max-height:200px}}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}`}</style>
+      <style>{`@keyframes speakPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}@keyframes barBounce{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}@keyframes swL{0%{opacity:0;transform:translateX(20px)}50%{opacity:1}100%{opacity:0;transform:translateX(-20px)}}@keyframes swR{0%{opacity:0;transform:translateX(-20px)}50%{opacity:1}100%{opacity:0;transform:translateX(20px)}}@keyframes hintIn{from{opacity:0;max-height:0}to{opacity:1;max-height:200px}}.cat-tile{transition:transform .2s ease,box-shadow .2s ease}.cat-tile:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,.08)!important}.cat-tile:active{transform:scale(.97)}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}`}</style>
 
       {showNamaste&&<NamasteAnim name={displayName} T={T}/>}
       {showTutorial&&<TutorialModal T={T} onDone={closeTutorial}/>}
@@ -355,10 +410,10 @@ export default function App(){
               </button>}
             </div>
             <div style={{fontSize:13,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:1.5,marginBottom:8,padding:"0 2px"}}>{u.cats}</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6,marginBottom:12}}>
-              {CATEGORIES.filter(c=>c!=="All").map(cat=>{const cc=CC[cat]||T.accent;const catCards=ALL_CARDS.filter(c=>c.cat===cat);return(<button key={cat} onClick={()=>enterCategory(cat)} style={{padding:"14px 14px",borderRadius:14,border:"none",background:`${cc}0C`,cursor:"pointer",textAlign:"left",fontFamily:"inherit",display:"flex",alignItems:"center",gap:10}}>
-                <span style={{fontSize:24}}>{CAT_EMOJI[cat]||"📁"}</span>
-                <div><div style={{fontSize:15,fontWeight:700,color:T.text,lineHeight:1.2}}>{catName(cat)}</div><div style={{fontSize:12,color:T.muted,marginTop:1}}>{catCards.length} {lang==="de"?"Karten":"cards"}</div></div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:12}}>
+              {CATEGORIES.filter(c=>c!=="All").map(cat=>{const cc=CC[cat]||T.accent;const catCards=ALL_CARDS.filter(c=>c.cat===cat);return(<button key={cat} className="cat-tile" onClick={()=>enterCategory(cat)} style={{padding:"16px 14px",borderRadius:18,border:`1px solid ${T.catCardBd}`,borderLeft:`4px solid ${cc}`,background:T.catCardBg,boxShadow:T.catCardShadow,cursor:"pointer",textAlign:"left",fontFamily:"inherit",display:"flex",alignItems:"center",gap:12}}>
+                <div style={{width:40,height:40,borderRadius:12,background:`${cc}14`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{CAT_EMOJI[cat]||"📁"}</div>
+                <div><div style={{fontSize:15,fontWeight:600,color:T.text,lineHeight:1.2}}>{catName(cat)}</div><div style={{fontSize:12,color:T.muted,marginTop:2}}>{catCards.length} {lang==="de"?"Karten":"cards"}</div></div>
               </button>);})}
             </div>
 
@@ -376,7 +431,22 @@ export default function App(){
               <div style={{position:"relative",width:"100%",height:"100%",transformStyle:"preserve-3d",transform:flipped?"rotateY(180deg)":"rotateY(0)",transition:"transform .65s cubic-bezier(.23,1,.32,1)"}}>
                 {/* ——— FRONT SIDE ——— */}
                 <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",WebkitBackfaceVisibility:"hidden",borderRadius:24,background:T.cardFront,border:`1px solid ${color}18`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"28px 22px",boxShadow:T.cardShadow}}>
+                  <div style={{position:"absolute",top:14,left:16,display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{fontSize:10,fontWeight:700,color:LVL_C[cl.level-1],background:`${LVL_C[cl.level-1]}18`,padding:"2px 8px",borderRadius:8}}>Lv{cl.level}</span>
+                    <button onClick={e=>{e.stopPropagation();setShowSchedule(v=>!v);}} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,padding:2,color:showSchedule?T.accent:T.muted,opacity:.7}}>🕐</button>
+                  </div>
                   <div style={{position:"absolute",top:14,right:16,fontSize:12,color:T.muted,letterSpacing:1.5,textTransform:"uppercase",fontWeight:600}}>{lang==="de"?"Deutsch":"English"}</div>
+                  {showSchedule&&<div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:38,left:14,right:14,padding:"8px 12px",borderRadius:12,background:T.hintBg,border:`1px solid ${T.hintBd}`,animation:"hintIn .3s ease-out",zIndex:5}}>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:T.sub,lineHeight:1.8}}>
+                      <span>Level: <b style={{color:LVL_C[cl.level-1]}}>{cl.level}/5</b></span>
+                      <span>Interval: <b>{LVL_LABELS_SHORT[cl.level-1]}</b></span>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:T.sub,lineHeight:1.8}}>
+                      <span>Reviewed: <b>{cl.lastReviewedAt?new Date(cl.lastReviewedAt).toLocaleDateString():"Never"}</b></span>
+                      <span>Next: <b style={{color:isDue(cardLevels,card?.id,timeOffset)?"#D06060":"#40A050"}}>{fmtRelTime(cl.nextReviewAt,timeOffset)}</b></span>
+                    </div>
+                    {timeOffset>0&&<div style={{fontSize:10,color:T.accent,marginTop:2,textAlign:"center"}}>⏩ Debug: +{Math.round(timeOffset/36e5)}h offset</div>}
+                  </div>}
                   <div style={{fontSize:cardFront&&cardFront.length>20?26:42,fontWeight:800,textAlign:"center",lineHeight:1.25,color:T.text}}>{cardFront}</div>
                   <div style={{marginTop:14,width:"100%",maxWidth:360,textAlign:"center"}}>{!showHint?<button onClick={e=>{e.stopPropagation();setShowHint(true);markActive();}} style={{padding:"8px 18px",borderRadius:14,border:`1.5px solid ${T.hintBd}`,background:T.hintBg,color:T.hintTx,fontSize:14,fontFamily:"inherit",fontWeight:600,cursor:"pointer",margin:"0 auto",display:"flex",alignItems:"center",gap:6}}>💡 {u.hint}</button>:<div style={{animation:"hintIn .3s ease-out",padding:"10px 16px",borderRadius:14,background:T.hintBg,border:`1.5px solid ${T.hintBd}`,fontSize:14,color:T.hintTx,lineHeight:1.5,fontWeight:500}} onClick={e=>e.stopPropagation()}>{cardHint}</div>}</div>
                   <div style={{marginTop:14,fontSize:13,color:T.faint}}>{u.flipHint}</div>
@@ -436,6 +506,11 @@ export default function App(){
           {supported&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px",borderRadius:16,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:8,boxShadow:T.catCardShadow}}><span style={{fontSize:15,fontWeight:700,color:T.text}}>🔊 {u.autoPlay}</span><button onClick={()=>setAutoSpeak(a=>!a)} style={{padding:"7px 14px",borderRadius:12,border:`1.5px solid ${autoSpeak?T.accent+"44":T.pillBd}`,background:autoSpeak?`${T.accent}14`:T.btnBg,color:autoSpeak?T.accent:T.text,fontSize:13,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>{autoSpeak?"ON":"OFF"}</button></div>}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px",borderRadius:16,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:8,boxShadow:T.catCardShadow}}><div><div style={{fontSize:15,fontWeight:700,color:T.text}}>🎯 {u.target}</div><div style={{fontSize:12,color:T.muted}}>{dailyTarget}{u.perDay}</div></div><div style={{display:"flex",gap:5}}>{[15,25,40,60].map(n=>(<button key={n} onClick={()=>setStats(p=>({...p,dailyTarget:n}))} style={{padding:"6px 10px",borderRadius:10,border:`1.5px solid ${dailyTarget===n?T.accent+"44":T.pillBd}`,background:dailyTarget===n?`${T.accent}14`:"transparent",color:dailyTarget===n?T.accent:T.muted,fontSize:12,fontFamily:"inherit",fontWeight:700,cursor:"pointer"}}>{n}</button>))}</div></div>
           <button onClick={()=>setShowTutorial(true)} style={{width:"100%",padding:"14px",borderRadius:16,border:`1px solid ${T.pillBd}`,background:T.pillBg,color:T.text,fontSize:14,fontFamily:"inherit",fontWeight:600,cursor:"pointer",marginBottom:8,boxShadow:T.catCardShadow}}>📖 {u.replay}</button>
+          <div style={{padding:"14px",borderRadius:16,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:8,boxShadow:T.catCardShadow}}>
+            <div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:6}}>⏩ {lang==="de"?"Zeitsimulation (Debug)":"Time Simulation (Debug)"}</div>
+            <div style={{fontSize:12,color:T.muted,marginBottom:8}}>{timeOffset>0?`+${Math.round(timeOffset/36e5)}h offset (${new Date(Date.now()+timeOffset).toLocaleString()})`:"No offset — real time"}</div>
+            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{[{l:"Reset",v:0},{l:"+1h",v:36e5},{l:"+12h",v:12*36e5},{l:"+48h",v:48*36e5},{l:"+4d",v:96*36e5},{l:"+7d",v:7*864e5},{l:"+30d",v:30*864e5}].map(o=>(<button key={o.l} onClick={()=>setTimeOffset(o.v===0?0:timeOffset+o.v)} style={{padding:"5px 10px",borderRadius:10,border:`1.5px solid ${o.v===0?(timeOffset===0?T.accent+"44":T.pillBd):(T.pillBd)}`,background:o.v===0&&timeOffset===0?`${T.accent}14`:"transparent",color:o.v===0?T.accent:T.sub,fontSize:12,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>{o.l}</button>))}</div>
+          </div>
           <button onClick={handleLogout} style={{width:"100%",padding:"14px",borderRadius:16,border:`1px solid ${T.pillBd}`,background:T.pillBg,color:T.text,fontSize:15,fontFamily:"inherit",fontWeight:700,cursor:"pointer",marginBottom:16,boxShadow:T.catCardShadow}}>🚪 {u.logout}</button>
           <div style={{padding:"14px",borderRadius:16,border:"1.5px solid #D0606030",background:"#D0606008"}}><DeleteBtn T={T} u={u}/></div>
         </div>}
