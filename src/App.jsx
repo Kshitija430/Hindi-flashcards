@@ -73,7 +73,7 @@ function shuffleArr(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math
 
 const TL={bgGrad:"linear-gradient(155deg,#F6F9FC 0%,#F0F3F8 30%,#EAF0F6 55%,#E6F0F4 75%,#F2F6FA 100%)",cardFront:"linear-gradient(155deg,#FFF,#FBFDFF 40%,#F6F9FE 70%,#F4F8FC)",text:"#1E1A20",sub:"#58505E",muted:"#908898",faint:"#C8C0D0",hintBg:"rgba(160,112,192,.06)",hintBd:"rgba(160,112,192,.15)",hintTx:"#5E4878",trickBg:"rgba(88,176,112,.06)",trickBd:"rgba(88,176,112,.16)",trickTx:"#38784A",pillBg:"#FFF",pillBd:"rgba(0,0,0,.06)",btnBg:"#FFF",btnBd:"rgba(0,0,0,.08)",btnTx:"#78708A",dotBg:"rgba(0,0,0,.07)",divider:"rgba(0,0,0,.06)",cardShadow:"0 8px 32px rgba(30,20,40,.06),0 2px 8px rgba(0,0,0,.03)",accent:"#4A8EC2",pronBg:"rgba(74,142,194,.06)",pronBd:"rgba(74,142,194,.16)",speedBg:"rgba(74,142,194,.04)",speedBd:"rgba(74,142,194,.10)",speedActive:"rgba(74,142,194,.12)",inputBg:"#FFF",inputBd:"rgba(0,0,0,.10)",overlayBg:"rgba(244,248,252,.98)",tabBg:"#FFF",tabBd:"rgba(0,0,0,.06)",barFill:"#4A8EC2",exBg:"rgba(80,168,184,.05)",exBd:"rgba(80,168,184,.14)",exTx:"#28708A",catCardBg:"#FFF",catCardBd:"rgba(0,0,0,.05)",catCardShadow:"0 2px 12px rgba(0,0,0,.04)"};
 const TD={bgGrad:"linear-gradient(155deg,#10141A 0%,#121824 30%,#101418 55%,#121620 75%,#141820 100%)",cardFront:"linear-gradient(155deg,#182028,#161A24 40%,#141820)",text:"#EDE8F0",sub:"#8A8098",muted:"#585060",faint:"#383040",hintBg:"rgba(255,255,255,.04)",hintBd:"rgba(255,255,255,.08)",hintTx:"#8A8098",trickBg:"rgba(88,176,112,.08)",trickBd:"rgba(88,176,112,.14)",trickTx:"#78C098",pillBg:"rgba(255,255,255,.04)",pillBd:"rgba(255,255,255,.06)",btnBg:"rgba(255,255,255,.05)",btnBd:"rgba(255,255,255,.08)",btnTx:"#8A8098",dotBg:"rgba(255,255,255,.08)",divider:"rgba(255,255,255,.05)",cardShadow:"0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.03)",accent:"#6AAED8",pronBg:"rgba(106,174,216,.10)",pronBd:"rgba(106,174,216,.20)",speedBg:"rgba(255,255,255,.03)",speedBd:"rgba(255,255,255,.06)",speedActive:"rgba(106,174,216,.14)",inputBg:"rgba(255,255,255,.06)",inputBd:"rgba(255,255,255,.10)",overlayBg:"rgba(16,20,26,.98)",tabBg:"#161A24",tabBd:"rgba(255,255,255,.06)",barFill:"#6AAED8",exBg:"rgba(80,168,184,.08)",exBd:"rgba(80,168,184,.12)",exTx:"#78C0D0",catCardBg:"rgba(255,255,255,.04)",catCardBd:"rgba(255,255,255,.06)",catCardShadow:"0 2px 12px rgba(0,0,0,.2)"};
-const SPEEDS=[{key:"normal",label:"Normal",rate:.82,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.15,emoji:"🐢"}];
+const SPEEDS=[{key:"normal",label:"Normal",rate:.72,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.08,emoji:"🐢"}];
 
 // ——— LANDING PAGE ———
 const PREVIEW_CARDS=[
@@ -194,7 +194,7 @@ function LandingPage({onStart,onLogin}){
   );
 }
 
-function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);const[v,sv]=useState(null);const r=useRef(null);useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;const p=()=>{const vs=r.current.getVoices();sv(vs.find(x=>x.lang==="hi-IN")||vs.find(x=>x.lang.startsWith("hi"))||null);};p();r.current.addEventListener("voiceschanged",p);return()=>r.current?.removeEventListener("voiceschanged",p);},[]);
+function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);const[v,sv]=useState(null);const r=useRef(null);useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;const p=()=>{const vs=r.current.getVoices();sv(vs.find(x=>x.lang==="hi-IN"&&x.name.includes("Google"))||vs.find(x=>x.lang==="hi-IN"&&!x.localService)||vs.find(x=>x.lang==="hi-IN")||vs.find(x=>x.lang.startsWith("hi"))||null);};p();r.current.addEventListener("voiceschanged",p);return()=>r.current?.removeEventListener("voiceschanged",p);},[]);
   // speakParts: split on "/" and speak each part with a pause
   const speak=useCallback((t,rate=.82,k="normal")=>{if(!r.current)return;r.current.cancel();
     const cleaned=cleanForSpeech(t);
@@ -202,7 +202,7 @@ function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);cons
     const speakPart=(i)=>{
       if(i>=parts.length){ss(false);sa(null);return;}
       const u=new SpeechSynthesisUtterance(parts[i].trim());
-      u.lang="hi-IN";u.rate=rate;u.pitch=1;if(v)u.voice=v;
+      u.lang="hi-IN";u.rate=rate;u.pitch=1.05;if(v)u.voice=v;
       u.onstart=()=>{ss(true);sa(k);};
       u.onend=()=>{if(i<parts.length-1){setTimeout(()=>speakPart(i+1),450);}else{ss(false);sa(null);}};
       u.onerror=()=>{ss(false);sa(null);};
@@ -256,6 +256,7 @@ export default function App(){
   const[favorites,setFavorites]=useState(new Set());
   const[timeOffset,setTimeOffset]=useState(0); // Debug: ms offset to simulate time
   const[showSchedule,setShowSchedule]=useState(false); // Toggle review schedule on card front
+  const[nailedCount,setNailedCount]=useState(0); // Counter: increments on every right swipe / Got it
   // New toggle states for card back info panels
   const[showLatin,setShowLatin]=useState(false);
   const[showGender,setShowGender]=useState(false);
@@ -271,6 +272,21 @@ export default function App(){
   const knownSet=useMemo(()=>new Set(Object.entries(cardLevels).filter(([,v])=>v.level>=5).map(([k])=>+k)),[cardLevels]);
   const learningSet=useMemo(()=>new Set(Object.entries(cardLevels).filter(([,v])=>v.level>=2&&v.level<5).map(([k])=>+k)),[cardLevels]);
   const dueCards=useMemo(()=>ALL_CARDS.filter(c=>isDue(cardLevels,c.id,timeOffset)),[cardLevels,timeOffset]);
+
+  // Calculate current streak (consecutive days with ≥1 flip ending today or yesterday)
+  const streak=useMemo(()=>{
+    const log=stats.dailyLog||{};
+    const d=new Date();d.setHours(0,0,0,0);
+    // Check if today has flips; if not, start from yesterday
+    const todayKey=d.toISOString().slice(0,10);
+    if(!log[todayKey]){d.setDate(d.getDate()-1);}
+    let count=0;
+    for(let i=0;i<365;i++){
+      const k=d.toISOString().slice(0,10);
+      if((log[k]||0)>0){count++;d.setDate(d.getDate()-1);}else break;
+    }
+    return count;
+  },[stats.dailyLog]);
 
   const baseCards=useMemo(()=>{
     if(practiceMode==="learning")return ALL_CARDS.filter(c=>{const l=getLevel(cardLevels,c.id).level;return l>=2&&l<5&&isDue(cardLevels,c.id,timeOffset);});
@@ -310,21 +326,21 @@ export default function App(){
   // Reset info toggles when card changes
   useEffect(()=>{setShowLatin(false);setShowGender(false);setShowPlural(false);setShowSchedule(false);},[idx]);
 
-  useEffect(()=>{const unsub=onAuthStateChanged(auth,async usr=>{setUser(usr);if(usr){const d=await loadData(usr.uid);if(d){setCardLevels(d.cardLevels||{});setUserName(d.name||"");setStats(d.stats||{totalMinutes:0,dailyLog:{},dailyTarget:25});setTodayFlips(d.stats?.dailyLog?.[today]||0);setLang(d.lang||"en");if(d.favorites)setFavorites(new Set(d.favorites));if(d.showTutorial)setShowTutorial(true);}setShowNamaste(true);}setAuthLoading(false);});return()=>unsub();},[]);
+  useEffect(()=>{const unsub=onAuthStateChanged(auth,async usr=>{setUser(usr);if(usr){const d=await loadData(usr.uid);if(d){setCardLevels(d.cardLevels||{});setUserName(d.name||"");setStats(d.stats||{totalMinutes:0,dailyLog:{},dailyTarget:25});setTodayFlips(d.stats?.dailyLog?.[today]||0);setLang(d.lang||"en");if(d.favorites)setFavorites(new Set(d.favorites));if(d.nailedCount)setNailedCount(d.nailedCount);if(d.showTutorial)setShowTutorial(true);}setShowNamaste(true);}setAuthLoading(false);});return()=>unsub();},[]);
 
   useEffect(()=>{if(!user)return;const iv=setInterval(()=>{if(Date.now()-lastActivity.current<60000){const el=(Date.now()-sessionStart.current)/60000;if(el>0&&el<2)setStats(p=>({...p,totalMinutes:(p.totalMinutes||0)+el}));}sessionStart.current=Date.now();},30000);return()=>clearInterval(iv);},[user]);
 
   const saveTimeout=useRef(null);
-  useEffect(()=>{if(!user)return;if(saveTimeout.current)clearTimeout(saveTimeout.current);saveTimeout.current=setTimeout(async()=>{setSaving(true);await saveData(user.uid,{name:userName,cardLevels,stats,lang,favorites:[...favorites],showTutorial:false});setSaving(false);},1000);return()=>{if(saveTimeout.current)clearTimeout(saveTimeout.current);};},[cardLevels,user,userName,stats,lang,favorites]);
+  useEffect(()=>{if(!user)return;if(saveTimeout.current)clearTimeout(saveTimeout.current);saveTimeout.current=setTimeout(async()=>{setSaving(true);await saveData(user.uid,{name:userName,cardLevels,stats,lang,favorites:[...favorites],nailedCount,showTutorial:false});setSaving(false);},1000);return()=>{if(saveTimeout.current)clearTimeout(saveTimeout.current);};},[cardLevels,user,userName,stats,lang,favorites,nailedCount]);
 
   const prevFlipped=useRef(false);
-  useEffect(()=>{if(flipped&&!prevFlipped.current){setTodayFlips(f=>f+1);setStats(p=>({...p,dailyLog:{...p.dailyLog,[today]:(p.dailyLog?.[today]||0)+1}}));if(autoSpeak&&supported&&card)setTimeout(()=>speak(card.back,.82,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,today]);
+  useEffect(()=>{if(flipped&&!prevFlipped.current){setTodayFlips(f=>f+1);setStats(p=>({...p,dailyLog:{...p.dailyLog,[today]:(p.dailyLog?.[today]||0)+1}}));if(autoSpeak&&supported&&card)setTimeout(()=>speak(card.back,.72,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,today]);
 
   const doFlip=useCallback(()=>{if(!anim){setFlipped(f=>!f);setShowHint(false);markActive();}},[anim,markActive]);
   const nav=useCallback(d=>{if(anim)return;setAnim(true);setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();markActive();setTimeout(()=>{setIdx(i=>{const n=i+d;return n<0?cards.length-1:n>=cards.length?0:n;});setAnim(false);},200);},[cards.length,anim,stop,markActive]);
 
   // DUE BUG FIX: track marked card id so useEffect can advance if card stays in list
-  const markKnow=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlUp(p,card.id,timeOffset));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop,timeOffset]);
+  const markKnow=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlUp(p,card.id,timeOffset));setNailedCount(n=>n+1);if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop,timeOffset]);
   const markLearn=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlDown(p,card.id,timeOffset));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop,timeOffset]);
 
   const onSwipeL=useCallback(()=>{setSwipeHint("left");setTimeout(()=>setSwipeHint(null),400);markLearn();},[markLearn]);
@@ -347,7 +363,7 @@ export default function App(){
   const doShuffle=()=>{setShuffledCards(shuffleArr(baseCards));setShuffled(true);setIdx(0);setFlipped(false);};
   const dailyTarget=stats.dailyTarget||25;const targetPct=Math.min(Math.round((todayFlips/dailyTarget)*100),100);
   const cl=card?getLevel(cardLevels,card.id):{level:1};
-  const speakEx=e=>{e.stopPropagation();markActive();if(card?.example)speak(card.example.hi,.2,"normal");};
+  const speakEx=e=>{e.stopPropagation();markActive();if(card?.example)speak(card.example.hi,.12,"normal");};
   const closeTutorial=()=>{setShowTutorial(false);if(user)saveData(user.uid,{showTutorial:false});};
   const inCardView=activeCategory!==null||practiceMode;
 
@@ -417,12 +433,12 @@ export default function App(){
               </button>);})}
             </div>
 
-            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6,padding:"10px 0",borderTop:`1px solid ${T.divider}`}}>{[{l:u.fav,v:favCards.length,c:"#E25555",i:"❤️",cl:()=>{if(favCards.length){setActiveCategory("__fav__");setIdx(0);setFlipped(false);setShowHint(false);setShuffledCards(shuffleArr(favCards));setShuffled(true);}}},{l:lang==="de"?"Am Lernen":"In progress",v:learningSet.size,c:"#C8A040",i:"📖",cl:()=>setShowList("learning")},{l:lang==="de"?"Gemeistert":"Nailed",v:knownSet.size,c:"#40A050",i:"⭐",cl:()=>setShowList("known")},{l:u.due,v:dueCards.length,c:"#D06060",i:"🔥",cl:()=>{setPracticeMode("due");setShuffledCards(shuffleArr(dueCards));setShuffled(true);setIdx(0);}}].map(s=>(<div key={s.l} onClick={s.cl} style={{padding:"10px 8px",borderRadius:12,background:`${s.c}08`,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><span style={{fontSize:15}}>{s.i}</span><span style={{fontSize:17,fontWeight:800,color:s.c}}>{s.v}</span><span style={{fontSize:11,color:T.muted,fontWeight:600}}>{s.l}</span></div>))}</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,padding:"10px 0",borderTop:`1px solid ${T.divider}`}}>{[{l:u.fav,v:favCards.length,c:"#E25555",i:"❤️",cl:()=>{if(favCards.length){setActiveCategory("__fav__");setIdx(0);setFlipped(false);setShowHint(false);setShuffledCards(shuffleArr(favCards));setShuffled(true);}}},{l:lang==="de"?"Am Lernen":"In progress",v:learningSet.size,c:"#C8A040",i:"📖",cl:()=>setShowList("learning")},{l:lang==="de"?"Richtig":"Nailed",v:nailedCount,c:"#40A050",i:"⭐",cl:()=>{}},{l:u.due,v:dueCards.length,c:"#D06060",i:"🔥",cl:()=>{setPracticeMode("due");setShuffledCards(shuffleArr(dueCards));setShuffled(true);setIdx(0);}}].map(s=>(<div key={s.l} onClick={s.cl} style={{padding:"8px 4px",borderRadius:12,background:`${s.c}08`,cursor:s.cl?"pointer":"default",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}><span style={{fontSize:14}}>{s.i}</span><span style={{fontSize:16,fontWeight:800,color:s.c}}>{s.v}</span><span style={{fontSize:10,color:T.muted,fontWeight:600,textAlign:"center",lineHeight:1.2}}>{s.l}</span></div>))}</div>
             </>}
           </>}
 
           {inCardView&&cards.length>0&&<>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><button onClick={practiceMode?exitPractice:goBackToGrid} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 12px",borderRadius:12,border:`1px solid ${T.pillBd}`,background:T.pillBg,color:T.sub,fontSize:13,fontFamily:"inherit",fontWeight:600,cursor:"pointer"}}>← {u.back}</button><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:13,color,fontWeight:700}}>{!practiceMode&&activeCategory!=="All"&&activeCategory!=="__fav__"?catName(activeCategory)+" · ":""}{activeCategory==="__fav__"?(u.fav+" · "):""}{idx+1}/{cards.length}</span><button onClick={doShuffle} style={{padding:"6px 12px",borderRadius:12,border:`1.5px solid ${T.accent}40`,background:`${T.accent}12`,color:T.accent,fontSize:12,fontFamily:"inherit",fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>🔀 {u.shuffle}</button></div></div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><button onClick={practiceMode?exitPractice:goBackToGrid} style={{display:"flex",alignItems:"center",gap:6,padding:"10px 18px",borderRadius:14,border:`2px solid ${T.accent}40`,background:`${T.accent}10`,color:T.accent,fontSize:15,fontFamily:"inherit",fontWeight:700,cursor:"pointer",boxShadow:`0 2px 8px ${T.accent}15`}}>← {u.back}</button><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:13,color,fontWeight:700}}>{!practiceMode&&activeCategory!=="All"&&activeCategory!=="__fav__"?catName(activeCategory)+" · ":""}{activeCategory==="__fav__"?(u.fav+" · "):""}{idx+1}/{cards.length}</span><button onClick={doShuffle} style={{padding:"6px 12px",borderRadius:12,border:`1.5px solid ${T.accent}40`,background:`${T.accent}12`,color:T.accent,fontSize:12,fontFamily:"inherit",fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>🔀 {u.shuffle}</button></div></div>
             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6,padding:"0 2px"}}><div style={{display:"flex",gap:3}}>{[1,2,3,4,5].map(l=>(<div key={l} style={{width:8,height:8,borderRadius:"50%",background:cl.level>=l?LVL_C[l-1]:T.dotBg}}/>))}</div><span style={{fontSize:12,fontWeight:700,color:LVL_C[cl.level-1]}}>{lvlNames[cl.level-1]}</span></div>
 
             <div {...swipe} onClick={doFlip} style={{perspective:1200,cursor:"pointer",marginBottom:8,height:450,position:"relative"}}>
@@ -492,7 +508,7 @@ export default function App(){
 
         {tab==="progress"&&<div>
           <h2 style={{fontSize:24,fontWeight:800,color:T.text,margin:"0 0 14px"}}>📊 {u.progress}</h2>
-          <div style={{display:"flex",alignItems:"center",gap:18,padding:"18px 16px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:14,boxShadow:T.catCardShadow}}><div style={{position:"relative",width:80,height:80,flexShrink:0}}><svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="none" stroke={T.dotBg} strokeWidth="7"/><circle cx="40" cy="40" r="34" fill="none" stroke={T.accent} strokeWidth="7" strokeDasharray={`${pct*2.14} ${214-pct*2.14}`} strokeDashoffset="54" strokeLinecap="round"/></svg><div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:800,color:T.accent}}>{pct}%</div></div><div><div style={{fontSize:13,fontWeight:600,color:T.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{u.mastery}</div><div style={{fontSize:18,fontWeight:700,color:T.text}}>✨ {knownSet.size}/{ALL_CARDS.length}</div><div style={{fontSize:13,color:T.sub,marginTop:3}}>⏱️ {Math.floor((stats.totalMinutes||0)/60)}h {Math.round((stats.totalMinutes||0)%60)}m</div></div></div>
+          <div style={{display:"flex",alignItems:"center",gap:18,padding:"18px 16px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:14,boxShadow:T.catCardShadow}}><div style={{position:"relative",width:80,height:80,flexShrink:0}}><svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="none" stroke={T.dotBg} strokeWidth="7"/><circle cx="40" cy="40" r="34" fill="none" stroke={T.accent} strokeWidth="7" strokeDasharray={`${pct*2.14} ${214-pct*2.14}`} strokeDashoffset="54" strokeLinecap="round"/></svg><div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:800,color:T.accent}}>{pct}%</div></div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:T.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{u.mastery}</div><div style={{fontSize:18,fontWeight:700,color:T.text}}>✨ {knownSet.size}/{ALL_CARDS.length}</div><div style={{fontSize:13,color:T.sub,marginTop:3}}>⏱️ {Math.floor((stats.totalMinutes||0)/60)}h {Math.round((stats.totalMinutes||0)%60)}m</div><div style={{display:"flex",gap:12,marginTop:6}}><div style={{padding:"4px 10px",borderRadius:10,background:streak>0?"#D8905014":"transparent",border:`1px solid ${streak>0?"#D8905030":T.pillBd}`}}><span style={{fontSize:13,fontWeight:700,color:streak>0?"#D89050":T.muted}}>🔥 {streak}{lang==="de"?" Tage":" day"}{streak!==1&&lang!=="de"?"s":""}</span></div><div style={{padding:"4px 10px",borderRadius:10,background:`${T.accent}08`,border:`1px solid ${T.accent}20`}}><span style={{fontSize:13,fontWeight:700,color:T.accent}}>💪 {nailedCount} {lang==="de"?"richtig":"nailed"}</span></div></div></div></div>
           <div style={{padding:"14px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:12,boxShadow:T.catCardShadow}}><div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:10}}>📅 {u.week}</div><div style={{display:"flex",gap:5,alignItems:"flex-end",height:80}}>{Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const k=d.toISOString().slice(0,10);const c=(stats.dailyLog||{})[k]||0;const isT=k===today;const max=Math.max(...Object.values(stats.dailyLog||{1:1}),dailyTarget,1);return(<div key={k} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><div style={{fontSize:10,fontWeight:700,color:isT?T.accent:T.muted}}>{c}</div><div style={{width:"100%",borderRadius:5,background:isT?T.accent:T.barFill,opacity:isT?1:.3,height:`${Math.max((c/max)*55,3)}px`}}/><div style={{fontSize:9,color:isT?T.accent:T.muted,fontWeight:isT?700:500}}>{d.toLocaleDateString(lang==="de"?"de":"en",{weekday:"short"})}</div></div>);})}</div></div>
           <div style={{padding:"14px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:12,boxShadow:T.catCardShadow}}><div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:10}}>🏆 {u.levels}</div>{[1,2,3,4,5].map(lv=>{const ct=ALL_CARDS.filter(c=>{const l=getLevel(cardLevels,c.id).level;return lv===1?(l===1||!cardLevels[c.id]):l===lv;}).length;return(<div key={lv} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}><div style={{width:70,fontSize:12,fontWeight:700,color:LVL_C[lv-1]}}>{lvlNames[lv-1]}</div><div style={{flex:1,height:6,borderRadius:3,background:T.dotBg,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${(ct/ALL_CARDS.length)*100}%`,background:LVL_C[lv-1]}}/></div><div style={{width:24,fontSize:12,fontWeight:600,color:T.muted,textAlign:"right"}}>{ct}</div></div>);})}</div>
           <div style={{padding:"14px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,boxShadow:T.catCardShadow}}><div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:10}}>📂 {u.cats}</div>{Object.entries(CC).map(([cat,col])=>{const cc=ALL_CARDS.filter(c=>c.cat===cat);const m=cc.filter(c=>getLevel(cardLevels,c.id).level>=5).length;const cp=cc.length?Math.round((m/cc.length)*100):0;return(<div key={cat} style={{marginBottom:7}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:13,fontWeight:600,color:col}}>{catName(cat)}</span><span style={{fontSize:11,color:T.muted}}>{m}/{cc.length}</span></div><div style={{height:5,borderRadius:3,background:T.dotBg,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${cp}%`,background:col}}/></div></div>);})}</div>
