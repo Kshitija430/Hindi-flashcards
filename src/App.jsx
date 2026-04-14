@@ -4,7 +4,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, on
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import ALL_CARDS from "./cards";
 
-const UI={en:{practice:"Practice",progress:"Progress",settings:"Settings",flipHint:"tap to flip · swipe ← →",hint:"Hint",gotIt:"Got it! →",still:"← Still learning",mastered:"Mastered",learning:"Learning",due:"Due",total:"Total",flips:"flips",done:"Target hit! ✨",example:"Example",play:"▶ Play",theme:"Appearance",autoPlay:"Auto-play sound",target:"Daily target",perDay:"/day",logout:"Log out",deleteAcc:"Delete account",deleteWarn:"Permanently deletes everything.",confirm:"Confirm delete",cancel:"Cancel",pw:"Password",mastery:"Overall mastery",week:"This week",levels:"Levels",cats:"Categories",pracDue:"Due cards",pracLearn:"Learning cards",pracAll:"Practice all",exit:"Exit",allDone:"All caught up!",back:"Back to categories",lang:"Interface language",shuffle:"Shuffle",replay:"Replay tutorial",new:"New",reviewing:"Reviewing",improving:"Improving",strong:"Strong",master:"Mastered",browseAll:"Browse all",dueNow:"due now",search:"Search cards...",fav:"Favourites",noResults:"No cards found"},de:{practice:"Übung",progress:"Fortschritt",settings:"Einstellungen",flipHint:"Tippen = umdrehen · Wischen ← →",hint:"Hinweis",gotIt:"Kann ich! →",still:"← Noch lernen",mastered:"Gemeistert",learning:"Am Lernen",due:"Fällig",total:"Gesamt",flips:"Karten",done:"Geschafft! ✨",example:"Beispiel",play:"▶",theme:"Aussehen",autoPlay:"Auto-Ton",target:"Tagesziel",perDay:"/Tag",logout:"Abmelden",deleteAcc:"Konto löschen",deleteWarn:"Löscht alles unwiderruflich.",confirm:"Endgültig löschen",cancel:"Abbrechen",pw:"Passwort",mastery:"Gesamtfortschritt",week:"Diese Woche",levels:"Stufen",cats:"Kategorien",pracDue:"Fällige Karten",pracLearn:"Lernkarten",pracAll:"Alle üben",exit:"Beenden",allDone:"Alles erledigt!",back:"Zurück",lang:"Sprache",shuffle:"Mischen",replay:"Tutorial wiederholen",new:"Neu",reviewing:"Wiederholung",improving:"Fortschritt",strong:"Sicher",master:"Gemeistert",browseAll:"Alle ansehen",dueNow:"fällig",search:"Karten suchen...",fav:"Favoriten",noResults:"Keine Karten gefunden"}};
+const UI={en:{practice:"Practice",progress:"Progress",settings:"Settings",flipHint:"tap to flip · swipe ← →",hint:"Hint",gotIt:"Got it! →",still:"← Still learning",mastered:"Mastered",learning:"Learning",due:"Due",total:"Total",flips:"reviewed",done:"Target hit! ✨",example:"Example",play:"▶ Play",theme:"Appearance",autoPlay:"Auto-play sound",target:"Daily target",perDay:"/day",logout:"Log out",deleteAcc:"Delete account",deleteWarn:"Permanently deletes everything.",confirm:"Confirm delete",cancel:"Cancel",pw:"Password",mastery:"Overall mastery",week:"This week",levels:"Levels",cats:"Categories",pracDue:"Due cards",pracLearn:"Learning cards",pracAll:"Practice all",exit:"Exit",allDone:"All caught up!",back:"Back to categories",lang:"Interface language",shuffle:"Shuffle",replay:"Replay tutorial",new:"New",reviewing:"Reviewing",improving:"Improving",strong:"Strong",master:"Mastered",browseAll:"Browse all",dueNow:"due now",search:"Search cards...",fav:"Favourites",noResults:"No cards found"},de:{practice:"Übung",progress:"Fortschritt",settings:"Einstellungen",flipHint:"Tippen = umdrehen · Wischen ← →",hint:"Hinweis",gotIt:"Kann ich! →",still:"← Noch lernen",mastered:"Gemeistert",learning:"Am Lernen",due:"Fällig",total:"Gesamt",flips:"geübt",done:"Geschafft! ✨",example:"Beispiel",play:"▶",theme:"Aussehen",autoPlay:"Auto-Ton",target:"Tagesziel",perDay:"/Tag",logout:"Abmelden",deleteAcc:"Konto löschen",deleteWarn:"Löscht alles unwiderruflich.",confirm:"Endgültig löschen",cancel:"Abbrechen",pw:"Passwort",mastery:"Gesamtfortschritt",week:"Diese Woche",levels:"Stufen",cats:"Kategorien",pracDue:"Fällige Karten",pracLearn:"Lernkarten",pracAll:"Alle üben",exit:"Beenden",allDone:"Alles erledigt!",back:"Zurück",lang:"Sprache",shuffle:"Mischen",replay:"Tutorial wiederholen",new:"Neu",reviewing:"Wiederholung",improving:"Fortschritt",strong:"Sicher",master:"Gemeistert",browseAll:"Alle ansehen",dueNow:"fällig",search:"Karten suchen...",fav:"Favoriten",noResults:"Keine Karten gefunden"}};
 const CAT_DE={Numbers:"Zahlen","Family & People":"Familie","Body Parts":"Körperteile","Nature & Weather":"Natur & Wetter",Colors:"Farben","Food & Home":"Essen & Haus",Places:"Orte",Time:"Zeit",Emotions:"Gefühle",Adjectives:"Adjektive",Verbs:"Verben","Common Words":"Häufige Wörter",Sentences:"Sätze"};
 const CAT_EMOJI={Numbers:"🔢","Family & People":"👨‍👩‍👧","Body Parts":"🫳","Nature & Weather":"🌧️",Colors:"🎨","Food & Home":"🏠",Places:"📍",Time:"⏰",Emotions:"💛",Adjectives:"✨",Verbs:"🏃","Common Words":"💬",Sentences:"🗣️"};
 
@@ -73,7 +73,7 @@ function shuffleArr(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math
 
 const TL={bgGrad:"linear-gradient(155deg,#F6F9FC 0%,#F0F3F8 30%,#EAF0F6 55%,#E6F0F4 75%,#F2F6FA 100%)",cardFront:"linear-gradient(155deg,#FFF,#FBFDFF 40%,#F6F9FE 70%,#F4F8FC)",text:"#1E1A20",sub:"#58505E",muted:"#908898",faint:"#C8C0D0",hintBg:"rgba(160,112,192,.06)",hintBd:"rgba(160,112,192,.15)",hintTx:"#5E4878",trickBg:"rgba(88,176,112,.06)",trickBd:"rgba(88,176,112,.16)",trickTx:"#38784A",pillBg:"#FFF",pillBd:"rgba(0,0,0,.06)",btnBg:"#FFF",btnBd:"rgba(0,0,0,.08)",btnTx:"#78708A",dotBg:"rgba(0,0,0,.07)",divider:"rgba(0,0,0,.06)",cardShadow:"0 8px 32px rgba(30,20,40,.06),0 2px 8px rgba(0,0,0,.03)",accent:"#4A8EC2",pronBg:"rgba(74,142,194,.06)",pronBd:"rgba(74,142,194,.16)",speedBg:"rgba(74,142,194,.04)",speedBd:"rgba(74,142,194,.10)",speedActive:"rgba(74,142,194,.12)",inputBg:"#FFF",inputBd:"rgba(0,0,0,.10)",overlayBg:"rgba(244,248,252,.98)",tabBg:"#FFF",tabBd:"rgba(0,0,0,.06)",barFill:"#4A8EC2",exBg:"rgba(80,168,184,.05)",exBd:"rgba(80,168,184,.14)",exTx:"#28708A",catCardBg:"#FFF",catCardBd:"rgba(0,0,0,.05)",catCardShadow:"0 2px 12px rgba(0,0,0,.04)"};
 const TD={bgGrad:"linear-gradient(155deg,#10141A 0%,#121824 30%,#101418 55%,#121620 75%,#141820 100%)",cardFront:"linear-gradient(155deg,#182028,#161A24 40%,#141820)",text:"#EDE8F0",sub:"#8A8098",muted:"#585060",faint:"#383040",hintBg:"rgba(255,255,255,.04)",hintBd:"rgba(255,255,255,.08)",hintTx:"#8A8098",trickBg:"rgba(88,176,112,.08)",trickBd:"rgba(88,176,112,.14)",trickTx:"#78C098",pillBg:"rgba(255,255,255,.04)",pillBd:"rgba(255,255,255,.06)",btnBg:"rgba(255,255,255,.05)",btnBd:"rgba(255,255,255,.08)",btnTx:"#8A8098",dotBg:"rgba(255,255,255,.08)",divider:"rgba(255,255,255,.05)",cardShadow:"0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.03)",accent:"#6AAED8",pronBg:"rgba(106,174,216,.10)",pronBd:"rgba(106,174,216,.20)",speedBg:"rgba(255,255,255,.03)",speedBd:"rgba(255,255,255,.06)",speedActive:"rgba(106,174,216,.14)",inputBg:"rgba(255,255,255,.06)",inputBd:"rgba(255,255,255,.10)",overlayBg:"rgba(16,20,26,.98)",tabBg:"#161A24",tabBd:"rgba(255,255,255,.06)",barFill:"#6AAED8",exBg:"rgba(80,168,184,.08)",exBd:"rgba(80,168,184,.12)",exTx:"#78C0D0",catCardBg:"rgba(255,255,255,.04)",catCardBd:"rgba(255,255,255,.06)",catCardShadow:"0 2px 12px rgba(0,0,0,.2)"};
-const SPEEDS=[{key:"normal",label:"Normal",rate:.72,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.45,emoji:"🐢"}];
+const SPEEDS=[{key:"normal",label:"Normal",rate:.75,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.50,emoji:"🐢"}];
 
 // ——— LANDING PAGE ———
 const PREVIEW_CARDS=[
@@ -194,22 +194,26 @@ function LandingPage({onStart,onLogin}){
   );
 }
 
-function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);const[v,sv]=useState(null);const r=useRef(null);useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;const p=()=>{const vs=r.current.getVoices();sv(vs.find(x=>x.lang==="hi-IN"&&x.name.includes("Google"))||vs.find(x=>x.lang==="hi-IN"&&!x.localService)||vs.find(x=>x.lang==="hi-IN")||vs.find(x=>x.lang.startsWith("hi"))||null);};p();r.current.addEventListener("voiceschanged",p);return()=>r.current?.removeEventListener("voiceschanged",p);},[]);
+function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);const[v,sv]=useState(null);const r=useRef(null);const keepAlive=useRef(null);
+  useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;const p=()=>{const vs=r.current.getVoices();sv(vs.find(x=>x.lang==="hi-IN"&&x.name.includes("Google"))||vs.find(x=>x.lang==="hi-IN"&&!x.localService)||vs.find(x=>x.lang==="hi-IN")||vs.find(x=>x.lang.startsWith("hi"))||null);};p();r.current.addEventListener("voiceschanged",p);return()=>r.current?.removeEventListener("voiceschanged",p);},[]);
+  // Chrome bug fix: pause+resume every 5s to prevent audio degradation on long utterances
+  const startKeepAlive=useCallback(()=>{if(keepAlive.current)clearInterval(keepAlive.current);keepAlive.current=setInterval(()=>{if(r.current&&r.current.speaking){r.current.pause();r.current.resume();}},5000);},[]);
+  const stopKeepAlive=useCallback(()=>{if(keepAlive.current){clearInterval(keepAlive.current);keepAlive.current=null;}},[]);
   // speakParts: split on "/" and speak each part with a pause
-  const speak=useCallback((t,rate=.82,k="normal")=>{if(!r.current)return;r.current.cancel();
+  const speak=useCallback((t,rate=.75,k="normal")=>{if(!r.current)return;r.current.cancel();stopKeepAlive();
     const cleaned=cleanForSpeech(t);
     const parts=cleaned.split(/\s*\/\s*/).filter(Boolean);
     const speakPart=(i)=>{
-      if(i>=parts.length){ss(false);sa(null);return;}
+      if(i>=parts.length){ss(false);sa(null);stopKeepAlive();return;}
       const u=new SpeechSynthesisUtterance(parts[i].trim());
       u.lang="hi-IN";u.rate=rate;u.pitch=1.05;if(v)u.voice=v;
-      u.onstart=()=>{ss(true);sa(k);};
-      u.onend=()=>{if(i<parts.length-1){setTimeout(()=>speakPart(i+1),450);}else{ss(false);sa(null);}};
-      u.onerror=()=>{ss(false);sa(null);};
+      u.onstart=()=>{ss(true);sa(k);startKeepAlive();};
+      u.onend=()=>{if(i<parts.length-1){setTimeout(()=>speakPart(i+1),450);}else{ss(false);sa(null);stopKeepAlive();}};
+      u.onerror=()=>{ss(false);sa(null);stopKeepAlive();};
       r.current.speak(u);
     };
     speakPart(0);
-  },[v]);const stop=useCallback(()=>{r.current?.cancel();ss(false);sa(null);},[]);return{speak,stop,speaking:s,activeSpeed:a,supported:typeof window!=="undefined"&&!!window.speechSynthesis};}
+  },[v,startKeepAlive,stopKeepAlive]);const stop=useCallback(()=>{r.current?.cancel();ss(false);sa(null);stopKeepAlive();},[stopKeepAlive]);return{speak,stop,speaking:s,activeSpeed:a,supported:typeof window!=="undefined"&&!!window.speechSynthesis};}
 function useSwipe(onL,onR){const sx=useRef(0);const sy=useRef(0);return{onTouchStart:useCallback(e=>{sx.current=e.touches[0].clientX;sy.current=e.touches[0].clientY;},[]),onTouchEnd:useCallback(e=>{const dx=e.changedTouches[0].clientX-sx.current;const dy=e.changedTouches[0].clientY-sy.current;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){dx>0?onR():onL();}},[onL,onR])};}
 
 async function saveData(uid,d){try{await setDoc(doc(db,"users",uid),{...d,updatedAt:new Date().toISOString()},{merge:true});}catch(e){console.error(e);}}
@@ -257,6 +261,7 @@ export default function App(){
   const[timeOffset,setTimeOffset]=useState(0); // Debug: ms offset to simulate time
   const[showSchedule,setShowSchedule]=useState(false); // Toggle review schedule on card front
   const[nailedCount,setNailedCount]=useState(0); // Counter: increments on every right swipe / Got it
+  const[showCatBreakdown,setShowCatBreakdown]=useState(false); // Toggle category breakdown from mastery ring
   // New toggle states for card back info panels
   const[showLatin,setShowLatin]=useState(false);
   const[showGender,setShowGender]=useState(false);
@@ -273,20 +278,21 @@ export default function App(){
   const learningSet=useMemo(()=>new Set(Object.entries(cardLevels).filter(([,v])=>v.level>=2&&v.level<5).map(([k])=>+k)),[cardLevels]);
   const dueCards=useMemo(()=>ALL_CARDS.filter(c=>isDue(cardLevels,c.id,timeOffset)),[cardLevels,timeOffset]);
 
-  // Calculate current streak (consecutive days with ≥1 flip ending today or yesterday)
+  // Calculate current streak (consecutive days meeting daily target)
   const streak=useMemo(()=>{
     const log=stats.dailyLog||{};
+    const dt=stats.dailyTarget||25;
     const d=new Date();d.setHours(0,0,0,0);
-    // Check if today has flips; if not, start from yesterday
+    // Check if today has met target; if not, start from yesterday
     const todayKey=d.toISOString().slice(0,10);
-    if(!log[todayKey]){d.setDate(d.getDate()-1);}
+    if((log[todayKey]||0)<dt){d.setDate(d.getDate()-1);}
     let count=0;
     for(let i=0;i<365;i++){
       const k=d.toISOString().slice(0,10);
-      if((log[k]||0)>0){count++;d.setDate(d.getDate()-1);}else break;
+      if((log[k]||0)>=dt){count++;d.setDate(d.getDate()-1);}else break;
     }
     return count;
-  },[stats.dailyLog]);
+  },[stats.dailyLog,stats.dailyTarget]);
 
   const baseCards=useMemo(()=>{
     if(practiceMode==="learning")return ALL_CARDS.filter(c=>{const l=getLevel(cardLevels,c.id).level;return l>=2&&l<5&&isDue(cardLevels,c.id,timeOffset);});
@@ -333,22 +339,23 @@ export default function App(){
   const saveTimeout=useRef(null);
   useEffect(()=>{if(!user)return;if(saveTimeout.current)clearTimeout(saveTimeout.current);saveTimeout.current=setTimeout(async()=>{setSaving(true);await saveData(user.uid,{name:userName,cardLevels,stats,lang,favorites:[...favorites],nailedCount,showTutorial:false});setSaving(false);},1000);return()=>{if(saveTimeout.current)clearTimeout(saveTimeout.current);};},[cardLevels,user,userName,stats,lang,favorites,nailedCount]);
 
+  const speakText=card?.speakAs||card?.back;
   const prevFlipped=useRef(false);
-  useEffect(()=>{if(flipped&&!prevFlipped.current){setTodayFlips(f=>f+1);setStats(p=>({...p,dailyLog:{...p.dailyLog,[today]:(p.dailyLog?.[today]||0)+1}}));if(autoSpeak&&supported&&card)setTimeout(()=>speak(card.back,.72,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,today]);
+  useEffect(()=>{if(flipped&&!prevFlipped.current){if(autoSpeak&&supported&&card)setTimeout(()=>speak(speakText,.75,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,speakText]);
 
   const doFlip=useCallback(()=>{if(!anim){setFlipped(f=>!f);setShowHint(false);markActive();}},[anim,markActive]);
   const nav=useCallback(d=>{if(anim)return;setAnim(true);setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();markActive();setTimeout(()=>{setIdx(i=>{const n=i+d;return n<0?cards.length-1:n>=cards.length?0:n;});setAnim(false);},200);},[cards.length,anim,stop,markActive]);
 
   // DUE BUG FIX: track marked card id so useEffect can advance if card stays in list
-  const markKnow=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlUp(p,card.id,timeOffset));setNailedCount(n=>n+1);if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop,timeOffset]);
-  const markLearn=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlDown(p,card.id,timeOffset));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop,timeOffset]);
+  const markKnow=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlUp(p,card.id,timeOffset));setNailedCount(n=>n+1);setTodayFlips(f=>f+1);setStats(p=>({...p,dailyLog:{...p.dailyLog,[today]:(p.dailyLog?.[today]||0)+1}}));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop,timeOffset,today]);
+  const markLearn=useCallback(()=>{if(!card)return;markActive();lastMarkedId.current=card.id;setCardLevels(p=>lvlDown(p,card.id,timeOffset));setTodayFlips(f=>f+1);setStats(p=>({...p,dailyLog:{...p.dailyLog,[today]:(p.dailyLog?.[today]||0)+1}}));if(practiceMode){setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();}else nav(1);},[card,nav,markActive,practiceMode,stop,timeOffset,today]);
 
   const onSwipeL=useCallback(()=>{setSwipeHint("left");setTimeout(()=>setSwipeHint(null),400);markLearn();},[markLearn]);
   const onSwipeR=useCallback(()=>{setSwipeHint("right");setTimeout(()=>setSwipeHint(null),400);markKnow();},[markKnow]);
   const swipe=useSwipe(onSwipeL,onSwipeR);
   const handleLogout=async()=>{stop();await signOut(auth);setAuthMode(null);};
   const pct=Math.round((knownSet.size/ALL_CARDS.length)*100);
-  const handlePlay=(e,sp)=>{e.stopPropagation();markActive();if(speaking&&activeSpeed===sp.key){stop();return;}speak(card.back,sp.rate,sp.key);};
+  const handlePlay=(e,sp)=>{e.stopPropagation();markActive();if(speaking&&activeSpeed===sp.key){stop();return;}speak(speakText,sp.rate,sp.key);};
   const displayName=userName||user?.email?.split("@")[0]||"Learner";
   const jumpToCard=id=>{setPracticeMode(null);setActiveCategory("All");setShuffled(false);setFlipped(false);setShowHint(false);stop();const i=ALL_CARDS.findIndex(c=>c.id===id);if(i>=0)setIdx(i);setShowList(null);setTab("practice");};
   const exitPractice=()=>{setPracticeMode(null);setActiveCategory(null);setShuffled(false);setIdx(0);setFlipped(false);setShowHint(false);};
@@ -363,7 +370,7 @@ export default function App(){
   const doShuffle=()=>{setShuffledCards(shuffleArr(baseCards));setShuffled(true);setIdx(0);setFlipped(false);};
   const dailyTarget=stats.dailyTarget||25;const targetPct=Math.min(Math.round((todayFlips/dailyTarget)*100),100);
   const cl=card?getLevel(cardLevels,card.id):{level:1};
-  const speakEx=e=>{e.stopPropagation();markActive();if(card?.example)speak(card.example.hi,.72,"normal");};
+  const speakEx=e=>{e.stopPropagation();markActive();if(card?.example)speak(card.example.hi,.75,"normal");};
   const closeTutorial=()=>{setShowTutorial(false);if(user)saveData(user.uid,{showTutorial:false});};
   const inCardView=activeCategory!==null||practiceMode;
 
@@ -392,7 +399,7 @@ export default function App(){
   return(
     <div style={{minHeight:"100vh",background:T.bgGrad,fontFamily:"'Outfit',sans-serif",color:T.text,display:"flex",flexDirection:"column",alignItems:"center",padding:"14px 14px 80px",boxSizing:"border-box",transition:"background .4s"}}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-      <style>{`@keyframes speakPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}@keyframes barBounce{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}@keyframes swL{0%{opacity:0;transform:translateX(20px)}50%{opacity:1}100%{opacity:0;transform:translateX(-20px)}}@keyframes swR{0%{opacity:0;transform:translateX(-20px)}50%{opacity:1}100%{opacity:0;transform:translateX(20px)}}@keyframes hintIn{from{opacity:0;max-height:0}to{opacity:1;max-height:200px}}.cat-tile{transition:transform .2s ease,box-shadow .2s ease}.cat-tile:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,.08)!important}.cat-tile:active{transform:scale(.97)}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}`}</style>
+      <style>{`@keyframes speakPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}@keyframes barBounce{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}@keyframes swL{0%{opacity:0;transform:translateX(20px)}50%{opacity:1}100%{opacity:0;transform:translateX(-20px)}}@keyframes swR{0%{opacity:0;transform:translateX(-20px)}50%{opacity:1}100%{opacity:0;transform:translateX(20px)}}@keyframes hintIn{from{opacity:0;max-height:0}to{opacity:1;max-height:200px}}@keyframes todayPulse{0%,100%{box-shadow:0 0 0 0 rgba(74,142,194,.4)}50%{box-shadow:0 0 0 4px rgba(74,142,194,.15)}}.cat-tile{transition:transform .2s ease,box-shadow .2s ease}.cat-tile:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,.08)!important}.cat-tile:active{transform:scale(.97)}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}`}</style>
 
       {showNamaste&&<NamasteAnim name={displayName} T={T}/>}
       {showTutorial&&<TutorialModal T={T} onDone={closeTutorial}/>}
@@ -508,10 +515,91 @@ export default function App(){
 
         {tab==="progress"&&<div>
           <h2 style={{fontSize:24,fontWeight:800,color:T.text,margin:"0 0 14px"}}>📊 {u.progress}</h2>
-          <div style={{display:"flex",alignItems:"center",gap:18,padding:"18px 16px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:14,boxShadow:T.catCardShadow}}><div style={{position:"relative",width:80,height:80,flexShrink:0}}><svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="none" stroke={T.dotBg} strokeWidth="7"/><circle cx="40" cy="40" r="34" fill="none" stroke={T.accent} strokeWidth="7" strokeDasharray={`${pct*2.14} ${214-pct*2.14}`} strokeDashoffset="54" strokeLinecap="round"/></svg><div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:800,color:T.accent}}>{pct}%</div></div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:T.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{u.mastery}</div><div style={{fontSize:18,fontWeight:700,color:T.text}}>✨ {knownSet.size}/{ALL_CARDS.length}</div><div style={{fontSize:13,color:T.sub,marginTop:3}}>⏱️ {Math.floor((stats.totalMinutes||0)/60)}h {Math.round((stats.totalMinutes||0)%60)}m</div><div style={{display:"flex",gap:12,marginTop:6}}><div style={{padding:"4px 10px",borderRadius:10,background:streak>0?"#D8905014":"transparent",border:`1px solid ${streak>0?"#D8905030":T.pillBd}`}}><span style={{fontSize:13,fontWeight:700,color:streak>0?"#D89050":T.muted}}>🔥 {streak}{lang==="de"?" Tage":" day"}{streak!==1&&lang!=="de"?"s":""}</span></div></div></div></div>
+          {/* ——— Mastery ring (clickable → shows categories) ——— */}
+          <div onClick={()=>setShowCatBreakdown(v=>!v)} style={{display:"flex",alignItems:"center",gap:18,padding:"18px 16px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:14,boxShadow:T.catCardShadow,cursor:"pointer",transition:"all .2s"}}><div style={{position:"relative",width:80,height:80,flexShrink:0}}><svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="none" stroke={T.dotBg} strokeWidth="7"/><circle cx="40" cy="40" r="34" fill="none" stroke={T.accent} strokeWidth="7" strokeDasharray={`${pct*2.14} ${214-pct*2.14}`} strokeDashoffset="54" strokeLinecap="round"/></svg><div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:800,color:T.accent}}>{pct}%</div></div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:T.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{u.mastery}</div><div style={{fontSize:18,fontWeight:700,color:T.text}}>✨ {knownSet.size}/{ALL_CARDS.length}</div><div style={{fontSize:13,color:T.sub,marginTop:3}}>⏱️ {Math.floor((stats.totalMinutes||0)/60)}h {Math.round((stats.totalMinutes||0)%60)}m</div><div style={{fontSize:11,color:T.muted,marginTop:4}}>{showCatBreakdown?"▲ Hide categories":"▼ Tap for category breakdown"}</div></div></div>
+          {/* ——— Category breakdown (collapsible) ——— */}
+          {showCatBreakdown&&<div style={{padding:"14px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:12,boxShadow:T.catCardShadow,animation:"hintIn .3s ease-out"}}><div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:10}}>📂 {u.cats}</div>{Object.entries(CC).map(([cat,col])=>{const cc=ALL_CARDS.filter(c=>c.cat===cat);const m=cc.filter(c=>getLevel(cardLevels,c.id).level>=5).length;const cp=cc.length?Math.round((m/cc.length)*100):0;return(<div key={cat} style={{marginBottom:7}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:13,fontWeight:600,color:col}}>{catName(cat)}</span><span style={{fontSize:11,color:T.muted}}>{m}/{cc.length}</span></div><div style={{height:5,borderRadius:3,background:T.dotBg,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${cp}%`,background:col}}/></div></div>);})}</div>}
+          {/* ——— STREAK CALENDAR ——— */}
+          {(()=>{
+            const log=stats.dailyLog||{};
+            const now=new Date();
+            const yr=now.getFullYear(),mo=now.getMonth();
+            const daysInMonth=new Date(yr,mo+1,0).getDate();
+            const firstDow=(new Date(yr,mo,1).getDay()+6)%7; // Mon=0
+            const todayDate=now.getDate();
+            const moNames=lang==="de"?["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]:["January","February","March","April","May","June","July","August","September","October","November","December"];
+            const dayLabels=lang==="de"?["Mo","Di","Mi","Do","Fr","Sa","So"]:["M","T","W","T","F","S","S"];
+            // Build completion map for this month
+            const isComplete=(day)=>{
+              const k=`${yr}-${String(mo+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+              return(log[k]||0)>=dailyTarget;
+            };
+            const getCount=(day)=>{
+              const k=`${yr}-${String(mo+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+              return log[k]||0;
+            };
+            // Check consecutive completion for "chain" lines
+            const isCompleteDay=(day)=>day>=1&&day<=daysInMonth&&isComplete(day);
+            return(
+            <div style={{padding:"16px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:12,boxShadow:T.catCardShadow}}>
+              {/* Header */}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                <div style={{fontSize:15,fontWeight:700,color:T.text}}>🔥 {lang==="de"?"Streak-Kalender":"Streak Calendar"}</div>
+                {streak>0&&<div style={{padding:"4px 12px",borderRadius:10,background:"#D8905014",border:"1px solid #D8905030"}}><span style={{fontSize:13,fontWeight:800,color:"#D89050"}}>{streak} {lang==="de"?"Tage":"day"}{streak!==1&&lang!=="de"?"s":""} 🔥</span></div>}
+              </div>
+              {/* Month label */}
+              <div style={{fontSize:13,fontWeight:600,color:T.muted,marginBottom:8,textAlign:"center"}}>{moNames[mo]} {yr}</div>
+              {/* Day headers */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>
+                {dayLabels.map((d,i)=><div key={i} style={{textAlign:"center",fontSize:10,fontWeight:600,color:T.muted,padding:"2px 0"}}>{d}</div>)}
+              </div>
+              {/* Calendar grid */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+                {/* Empty cells for offset */}
+                {Array.from({length:firstDow},(_,i)=><div key={`e${i}`}/>)}
+                {/* Day cells */}
+                {Array.from({length:daysInMonth},(_,i)=>{
+                  const day=i+1;
+                  const isFuture=day>todayDate;
+                  const isToday=day===todayDate;
+                  const done=isComplete(day);
+                  const cnt=getCount(day);
+                  const missed=!isFuture&&!isToday&&!done&&day<todayDate;
+                  // Chain: thick connector if this day and previous day are both complete
+                  const prevDone=isCompleteDay(day-1);
+                  const dayDow=(firstDow+i)%7; // 0=Mon
+                  const chainLeft=done&&prevDone&&dayDow!==0; // no chain on Monday (row start)
+                  return(
+                    <div key={day} style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      {/* Chain connector line */}
+                      {chainLeft&&<div style={{position:"absolute",left:-3,top:"50%",transform:"translateY(-50%)",width:6,height:4,borderRadius:2,background:T.accent,zIndex:1}}/>}
+                      <div style={{
+                        width:34,height:34,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:isToday||done?700:500,
+                        background:done?T.accent:isToday?`${T.accent}12`:"transparent",
+                        color:done?"#FFF":isFuture?T.faint:isToday?T.accent:missed?T.muted:T.sub,
+                        border:missed?`1.5px dashed ${T.faint}`:isToday&&!done?`2px solid ${T.accent}`:`1.5px solid transparent`,
+                        animation:isToday&&!done?"todayPulse 2s ease-in-out infinite":"none",
+                        opacity:isFuture?.35:1,position:"relative",
+                      }}>
+                        {done&&!isToday?<span style={{fontSize:12}}>🔥</span>:day}
+                        {isToday&&done&&<span style={{fontSize:12}}>🔥</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Legend */}
+              <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:10,flexWrap:"wrap"}}>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,borderRadius:"50%",background:T.accent}}/><span style={{fontSize:10,color:T.muted}}>{lang==="de"?"Geschafft":"Completed"}</span></div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,borderRadius:"50%",border:`1.5px dashed ${T.faint}`}}/><span style={{fontSize:10,color:T.muted}}>{lang==="de"?"Verpasst":"Missed"}</span></div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:10,height:10,borderRadius:"50%",border:`2px solid ${T.accent}`}}/><span style={{fontSize:10,color:T.muted}}>{lang==="de"?"Heute":"Today"}</span></div>
+              </div>
+            </div>
+            );
+          })()}
+          {/* ——— This week bar chart ——— */}
           <div style={{padding:"14px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:12,boxShadow:T.catCardShadow}}><div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:10}}>📅 {u.week}</div><div style={{display:"flex",gap:5,alignItems:"flex-end",height:80}}>{Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const k=d.toISOString().slice(0,10);const c=(stats.dailyLog||{})[k]||0;const isT=k===today;const max=Math.max(...Object.values(stats.dailyLog||{1:1}),dailyTarget,1);return(<div key={k} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><div style={{fontSize:10,fontWeight:700,color:isT?T.accent:T.muted}}>{c}</div><div style={{width:"100%",borderRadius:5,background:isT?T.accent:T.barFill,opacity:isT?1:.3,height:`${Math.max((c/max)*55,3)}px`}}/><div style={{fontSize:9,color:isT?T.accent:T.muted,fontWeight:isT?700:500}}>{d.toLocaleDateString(lang==="de"?"de":"en",{weekday:"short"})}</div></div>);})}</div></div>
           <div style={{padding:"14px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,marginBottom:12,boxShadow:T.catCardShadow}}><div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:10}}>🏆 {u.levels}</div>{[1,2,3,4,5].map(lv=>{const ct=ALL_CARDS.filter(c=>{const l=getLevel(cardLevels,c.id).level;return lv===1?(l===1||!cardLevels[c.id]):l===lv;}).length;return(<div key={lv} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}><div style={{width:70,fontSize:12,fontWeight:700,color:LVL_C[lv-1]}}>{lvlNames[lv-1]}</div><div style={{flex:1,height:6,borderRadius:3,background:T.dotBg,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${(ct/ALL_CARDS.length)*100}%`,background:LVL_C[lv-1]}}/></div><div style={{width:24,fontSize:12,fontWeight:600,color:T.muted,textAlign:"right"}}>{ct}</div></div>);})}</div>
-          <div style={{padding:"14px",borderRadius:20,background:T.pillBg,border:`1px solid ${T.pillBd}`,boxShadow:T.catCardShadow}}><div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:10}}>📂 {u.cats}</div>{Object.entries(CC).map(([cat,col])=>{const cc=ALL_CARDS.filter(c=>c.cat===cat);const m=cc.filter(c=>getLevel(cardLevels,c.id).level>=5).length;const cp=cc.length?Math.round((m/cc.length)*100):0;return(<div key={cat} style={{marginBottom:7}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:13,fontWeight:600,color:col}}>{catName(cat)}</span><span style={{fontSize:11,color:T.muted}}>{m}/{cc.length}</span></div><div style={{height:5,borderRadius:3,background:T.dotBg,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${cp}%`,background:col}}/></div></div>);})}</div>
         </div>}
 
         {tab==="settings"&&<div>
