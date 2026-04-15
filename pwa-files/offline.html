@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Hindi Flashcards — Offline</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+Devanagari:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(170deg, #F6F9FC 0%, #EDF2F8 25%, #E8EEF6 50%, #E4F0F4 75%, #F2F6FA 100%);
+      font-family: 'Outfit', sans-serif;
+      color: #1E1A20;
+      padding: 24px;
+      text-align: center;
+    }
+    .container {
+      max-width: 380px;
+    }
+    .emoji {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .hindi {
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-size: 20px;
+      color: #4A8EC2;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    p {
+      font-size: 15px;
+      color: #58505E;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    button {
+      padding: 14px 32px;
+      border-radius: 16px;
+      border: none;
+      background: linear-gradient(135deg, #4A8EC2, #5BA0D4);
+      color: #FFF;
+      font-size: 16px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(74, 142, 194, 0.3);
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="emoji">📶</div>
+    <h1>You're offline</h1>
+    <div class="hindi">इंटरनेट नहीं है</div>
+    <p>Hindi Flashcards needs an internet connection to load your progress. Check your connection and try again.</p>
+    <button onclick="window.location.reload()">Try again</button>
+  </div>
+</body>
+</html>

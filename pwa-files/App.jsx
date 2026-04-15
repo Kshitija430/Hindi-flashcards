@@ -332,10 +332,6 @@ export default function App(){
   const[showIOSModal,setShowIOSModal]=useState(false);
   const[installFeedback,setInstallFeedback]=useState("");
 
-  const{speak,stop,speaking,activeSpeed,supported}=useSpeech();
-  const T=dark?TD:TL;const u=UI[lang]||UI.en;const today=new Date().toISOString().slice(0,10);
-  const lvlNames=[u.new,u.reviewing,u.improving,u.strong,u.master];
-
   const handleInstallClick=useCallback(async()=>{
     if(pwa.isInstalled)return;
     if(pwa.isIOS){setShowIOSModal(true);return;}
@@ -346,6 +342,10 @@ export default function App(){
       setTimeout(()=>setInstallFeedback(""),3000);
     }
   },[pwa,u]);
+
+  const{speak,stop,speaking,activeSpeed,supported}=useSpeech();
+  const T=dark?TD:TL;const u=UI[lang]||UI.en;const today=new Date().toISOString().slice(0,10);
+  const lvlNames=[u.new,u.reviewing,u.improving,u.strong,u.master];
 
   const knownSet=useMemo(()=>new Set(Object.entries(cardLevels).filter(([,v])=>v.level>=5).map(([k])=>+k)),[cardLevels]);
   const learningSet=useMemo(()=>new Set(Object.entries(cardLevels).filter(([,v])=>v.level>=2&&v.level<5).map(([k])=>+k)),[cardLevels]);
