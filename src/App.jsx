@@ -130,7 +130,17 @@ function shuffleArr(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math
 
 const TL={bgGrad:"linear-gradient(155deg,#F6F9FC 0%,#F0F3F8 30%,#EAF0F6 55%,#E6F0F4 75%,#F2F6FA 100%)",cardFront:"linear-gradient(155deg,#FFF,#FBFDFF 40%,#F6F9FE 70%,#F4F8FC)",text:"#1E1A20",sub:"#58505E",muted:"#908898",faint:"#C8C0D0",hintBg:"rgba(160,112,192,.06)",hintBd:"rgba(160,112,192,.15)",hintTx:"#5E4878",trickBg:"rgba(88,176,112,.06)",trickBd:"rgba(88,176,112,.16)",trickTx:"#38784A",pillBg:"#FFF",pillBd:"rgba(0,0,0,.06)",btnBg:"#FFF",btnBd:"rgba(0,0,0,.08)",btnTx:"#78708A",dotBg:"rgba(0,0,0,.07)",divider:"rgba(0,0,0,.06)",cardShadow:"0 8px 32px rgba(30,20,40,.06),0 2px 8px rgba(0,0,0,.03)",accent:"#4A8EC2",pronBg:"rgba(74,142,194,.06)",pronBd:"rgba(74,142,194,.16)",speedBg:"rgba(74,142,194,.04)",speedBd:"rgba(74,142,194,.10)",speedActive:"rgba(74,142,194,.12)",inputBg:"#FFF",inputBd:"rgba(0,0,0,.10)",overlayBg:"rgba(244,248,252,.98)",tabBg:"#FFF",tabBd:"rgba(0,0,0,.06)",barFill:"#4A8EC2",exBg:"rgba(80,168,184,.05)",exBd:"rgba(80,168,184,.14)",exTx:"#28708A",catCardBg:"#FFF",catCardBd:"rgba(0,0,0,.05)",catCardShadow:"0 2px 12px rgba(0,0,0,.04)"};
 const TD={bgGrad:"linear-gradient(155deg,#10141A 0%,#121824 30%,#101418 55%,#121620 75%,#141820 100%)",cardFront:"linear-gradient(155deg,#182028,#161A24 40%,#141820)",text:"#EDE8F0",sub:"#8A8098",muted:"#585060",faint:"#383040",hintBg:"rgba(255,255,255,.04)",hintBd:"rgba(255,255,255,.08)",hintTx:"#8A8098",trickBg:"rgba(88,176,112,.08)",trickBd:"rgba(88,176,112,.14)",trickTx:"#78C098",pillBg:"rgba(255,255,255,.04)",pillBd:"rgba(255,255,255,.06)",btnBg:"rgba(255,255,255,.05)",btnBd:"rgba(255,255,255,.08)",btnTx:"#8A8098",dotBg:"rgba(255,255,255,.08)",divider:"rgba(255,255,255,.05)",cardShadow:"0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.03)",accent:"#6AAED8",pronBg:"rgba(106,174,216,.10)",pronBd:"rgba(106,174,216,.20)",speedBg:"rgba(255,255,255,.03)",speedBd:"rgba(255,255,255,.06)",speedActive:"rgba(106,174,216,.14)",inputBg:"rgba(255,255,255,.06)",inputBd:"rgba(255,255,255,.10)",overlayBg:"rgba(16,20,26,.98)",tabBg:"#161A24",tabBd:"rgba(255,255,255,.06)",barFill:"#6AAED8",exBg:"rgba(80,168,184,.08)",exBd:"rgba(80,168,184,.12)",exTx:"#78C0D0",catCardBg:"rgba(255,255,255,.04)",catCardBd:"rgba(255,255,255,.06)",catCardShadow:"0 2px 12px rgba(0,0,0,.2)"};
-const SPEEDS=[{key:"normal",label:"Normal",rate:.75,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.50,emoji:"🐢"}];
+// ——— Platform detection for audio ———
+const IS_MOBILE=/iPhone|iPad|iPod|Android/i.test(typeof navigator!=="undefined"?navigator.userAgent:"");
+const IS_IOS=/iPad|iPhone|iPod/.test(typeof navigator!=="undefined"?navigator.userAgent:"");
+// Mobile TTS engines need wider rate gaps; iOS rate scale differs from Chrome
+const SPEEDS=IS_IOS
+  ?[{key:"normal",label:"Normal",rate:.55,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.28,emoji:"🐢"}]
+  :IS_MOBILE
+    ?[{key:"normal",label:"Normal",rate:.70,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.38,emoji:"🐢"}]
+    :[{key:"normal",label:"Normal",rate:.75,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.50,emoji:"🐢"}];
+const NORMAL_RATE=SPEEDS[0].rate;
+const EX_RATE=IS_IOS?.50:IS_MOBILE?.65:.75;
 
 // ——— LANDING PAGE ———
 const PREVIEW_CARDS=[
@@ -252,18 +262,38 @@ function LandingPage({onStart,onLogin}){
 }
 
 function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);const[v,sv]=useState(null);const r=useRef(null);const keepAlive=useRef(null);
-  useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;const p=()=>{const vs=r.current.getVoices();sv(vs.find(x=>x.lang==="hi-IN"&&x.name.includes("Google"))||vs.find(x=>x.lang==="hi-IN"&&!x.localService)||vs.find(x=>x.lang==="hi-IN")||vs.find(x=>x.lang.startsWith("hi"))||null);};p();r.current.addEventListener("voiceschanged",p);return()=>r.current?.removeEventListener("voiceschanged",p);},[]);
+  useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;
+    const pickBest=(vs)=>{
+      const hi=vs.filter(x=>x.lang==="hi-IN"||x.lang.startsWith("hi"));
+      if(!hi.length)return null;
+      // Priority: Google cloud > any non-local > "Lekha" (iOS) > first available
+      const google=hi.find(x=>x.name.includes("Google"));
+      if(google){console.log("[Audio] Using Google voice:",google.name);return google;}
+      const cloud=hi.find(x=>!x.localService);
+      if(cloud){console.log("[Audio] Using cloud voice:",cloud.name);return cloud;}
+      // iOS: prefer Lekha (enhanced) over default
+      const lekha=hi.find(x=>x.name.includes("Lekha"));
+      if(lekha){console.log("[Audio] Using iOS voice:",lekha.name);return lekha;}
+      console.log("[Audio] Using fallback voice:",hi[0].name,"(local:",hi[0].localService,")");
+      return hi[0];
+    };
+    const p=()=>{const vs=r.current.getVoices();if(vs.length)sv(pickBest(vs));};
+    p();r.current.addEventListener("voiceschanged",p);
+    // iOS sometimes needs a delayed retry
+    if(IS_IOS)setTimeout(p,500);
+    return()=>r.current?.removeEventListener("voiceschanged",p);
+  },[]);
   // Chrome bug fix: pause+resume every 5s to prevent audio degradation on long utterances
-  const startKeepAlive=useCallback(()=>{if(keepAlive.current)clearInterval(keepAlive.current);keepAlive.current=setInterval(()=>{if(r.current&&r.current.speaking){r.current.pause();r.current.resume();}},5000);},[]);
+  const startKeepAlive=useCallback(()=>{if(keepAlive.current)clearInterval(keepAlive.current);if(IS_MOBILE)return;keepAlive.current=setInterval(()=>{if(r.current&&r.current.speaking){r.current.pause();r.current.resume();}},5000);},[]);
   const stopKeepAlive=useCallback(()=>{if(keepAlive.current){clearInterval(keepAlive.current);keepAlive.current=null;}},[]);
   // speakParts: split on "/" and speak each part with a pause
-  const speak=useCallback((t,rate=.75,k="normal")=>{if(!r.current)return;r.current.cancel();stopKeepAlive();
+  const speak=useCallback((t,rate=NORMAL_RATE,k="normal")=>{if(!r.current)return;r.current.cancel();stopKeepAlive();
     const cleaned=cleanForSpeech(t);
     const parts=cleaned.split(/\s*\/\s*/).filter(Boolean);
     const speakPart=(i)=>{
       if(i>=parts.length){ss(false);sa(null);stopKeepAlive();return;}
       const u=new SpeechSynthesisUtterance(parts[i].trim());
-      u.lang="hi-IN";u.rate=rate;u.pitch=1.05;if(v)u.voice=v;
+      u.lang="hi-IN";u.rate=rate;u.pitch=IS_IOS?1.1:1.05;u.volume=1;if(v)u.voice=v;
       u.onstart=()=>{ss(true);sa(k);startKeepAlive();};
       u.onend=()=>{if(i<parts.length-1){setTimeout(()=>speakPart(i+1),450);}else{ss(false);sa(null);stopKeepAlive();}};
       u.onerror=()=>{ss(false);sa(null);stopKeepAlive();};
@@ -331,6 +361,23 @@ export default function App(){
   const pwa=usePWAInstall();
   const[showIOSModal,setShowIOSModal]=useState(false);
   const[installFeedback,setInstallFeedback]=useState("");
+  const[swUpdate,setSwUpdate]=useState(false); // true when new SW version detected
+
+  // Listen for service worker update messages
+  useEffect(()=>{
+    if(!("serviceWorker" in navigator))return;
+    const onMsg=(e)=>{if(e.data?.type==="SW_UPDATED")setSwUpdate(true);};
+    navigator.serviceWorker.addEventListener("message",onMsg);
+    // Also check for waiting SW on load
+    navigator.serviceWorker.ready.then((reg)=>{
+      if(reg.waiting)setSwUpdate(true);
+      reg.addEventListener("updatefound",()=>{
+        const nw=reg.installing;
+        if(nw)nw.addEventListener("statechange",()=>{if(nw.state==="installed"&&navigator.serviceWorker.controller)setSwUpdate(true);});
+      });
+    });
+    return()=>navigator.serviceWorker.removeEventListener("message",onMsg);
+  },[]);
 
   const{speak,stop,speaking,activeSpeed,supported}=useSpeech();
   const T=dark?TD:TL;const u=UI[lang]||UI.en;const today=new Date().toISOString().slice(0,10);
@@ -414,7 +461,7 @@ export default function App(){
 
   const speakText=card?.speakAs||card?.back;
   const prevFlipped=useRef(false);
-  useEffect(()=>{if(flipped&&!prevFlipped.current){if(autoSpeak&&supported&&card)setTimeout(()=>speak(speakText,.75,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,speakText]);
+  useEffect(()=>{if(flipped&&!prevFlipped.current){if(autoSpeak&&supported&&card)setTimeout(()=>speak(speakText,NORMAL_RATE,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,speakText]);
 
   const doFlip=useCallback(()=>{if(!anim){setFlipped(f=>!f);setShowHint(false);markActive();}},[anim,markActive]);
   const nav=useCallback(d=>{if(anim)return;setAnim(true);setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();markActive();setTimeout(()=>{setIdx(i=>{const n=i+d;return n<0?cards.length-1:n>=cards.length?0:n;});setAnim(false);},200);},[cards.length,anim,stop,markActive]);
@@ -443,7 +490,7 @@ export default function App(){
   const doShuffle=()=>{setShuffledCards(shuffleArr(baseCards));setShuffled(true);setIdx(0);setFlipped(false);};
   const dailyTarget=stats.dailyTarget||25;const targetPct=Math.min(Math.round((todayFlips/dailyTarget)*100),100);
   const cl=card?getLevel(cardLevels,card.id):{level:1};
-  const speakEx=e=>{e.stopPropagation();markActive();if(card?.example)speak(card.example.hi,.75,"normal");};
+  const speakEx=e=>{e.stopPropagation();markActive();if(card?.example)speak(card.example.hi,EX_RATE,"normal");};
   const closeTutorial=()=>{setShowTutorial(false);if(user)saveData(user.uid,{showTutorial:false});};
   const inCardView=activeCategory!==null||practiceMode;
 
@@ -473,6 +520,12 @@ export default function App(){
     <div style={{minHeight:"100vh",background:T.bgGrad,fontFamily:"'Outfit',sans-serif",color:T.text,display:"flex",flexDirection:"column",alignItems:"center",padding:"14px 14px 80px",boxSizing:"border-box",transition:"background .4s"}}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
       <style>{`@keyframes speakPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}@keyframes barBounce{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}@keyframes swL{0%{opacity:0;transform:translateX(20px)}50%{opacity:1}100%{opacity:0;transform:translateX(-20px)}}@keyframes swR{0%{opacity:0;transform:translateX(-20px)}50%{opacity:1}100%{opacity:0;transform:translateX(20px)}}@keyframes hintIn{from{opacity:0;max-height:0}to{opacity:1;max-height:200px}}@keyframes todayPulse{0%,100%{box-shadow:0 0 0 0 rgba(74,142,194,.4)}50%{box-shadow:0 0 0 4px rgba(74,142,194,.15)}}.cat-tile{transition:transform .2s ease,box-shadow .2s ease}.cat-tile:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,.08)!important}.cat-tile:active{transform:scale(.97)}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}`}</style>
+
+      {/* ——— PWA Update Banner ——— */}
+      {swUpdate&&<div style={{position:"fixed",top:0,left:0,right:0,zIndex:250,padding:"10px 16px",background:"linear-gradient(135deg,#4A8EC2,#5BA0D4)",display:"flex",alignItems:"center",justifyContent:"center",gap:10,boxShadow:"0 2px 12px rgba(0,0,0,.15)"}}>
+        <span style={{fontSize:14,color:"#FFF",fontWeight:600,fontFamily:"'Outfit',sans-serif"}}>🔄 {lang==="de"?"Neue Version verfügbar!":"New version available!"}</span>
+        <button onClick={()=>{setSwUpdate(false);window.location.reload();}} style={{padding:"6px 16px",borderRadius:10,border:"2px solid rgba(255,255,255,.4)",background:"rgba(255,255,255,.15)",color:"#FFF",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:700,cursor:"pointer"}}>{lang==="de"?"Aktualisieren":"Update"}</button>
+      </div>}
 
       {showNamaste&&<NamasteAnim name={displayName} T={T}/>}
       {showTutorial&&<TutorialModal T={T} onDone={closeTutorial}/>}

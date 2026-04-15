@@ -1,67 +1,57 @@
-// ============================================================
-// Hindi Flashcards — Service Worker
-// Cache-first for static assets, network-first for API/data
-// ============================================================
+// Hindi Flashcards — Service Worker v2
+// Cache-first static, network-first API, auto-update notification
 
-const CACHE_NAME = 'hindi-flashcards-v1';
+const CACHE_VERSION = 2;
+const CACHE_NAME = `hindi-flashcards-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
-// Core assets to pre-cache on install
 const PRECACHE_ASSETS = [
   '/',
-  '/index.html',
   '/offline.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
 ];
 
-// ——— INSTALL: Pre-cache core assets ———
+// INSTALL: pre-cache + skip waiting
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Pre-caching core assets');
+      console.log('[SW] Pre-caching v' + CACHE_VERSION);
       return cache.addAll(PRECACHE_ASSETS);
     })
   );
-  // Activate immediately, don't wait for old SW to die
   self.skipWaiting();
 });
 
-// ——— ACTIVATE: Clean up old caches ———
+// ACTIVATE: clean old caches + notify all tabs
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
-      );
+    caches.keys().then((names) =>
+      Promise.all(
+        names
+          .filter((n) => n.startsWith('hindi-flashcards-') && n !== CACHE_NAME)
+          .map((n) => caches.delete(n))
+      )
+    ).then(() => {
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((c) => c.postMessage({ type: 'SW_UPDATED', version: CACHE_VERSION }));
+      });
     })
   );
-  // Take control of all pages immediately
   self.clients.claim();
 });
 
-// ——— FETCH: Smart caching strategy ———
+// FETCH
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-
-  // Skip non-GET requests
   if (request.method !== 'GET') return;
-
-  // Skip Chrome extensions, external origins we don't control
   if (!url.origin.includes(self.location.origin) &&
       !url.hostname.includes('fonts.googleapis.com') &&
-      !url.hostname.includes('fonts.gstatic.com')) {
-    return;
-  }
+      !url.hostname.includes('fonts.gstatic.com')) return;
 
-  // Network-first for Firebase/API requests (Firestore, Auth)
+  // Network-first for Firebase
   if (url.hostname.includes('firebaseio.com') ||
       url.hostname.includes('googleapis.com') ||
       url.hostname.includes('firebase') ||
@@ -70,57 +60,33 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for HTML navigation requests (always get fresh page)
+  // Network-first for navigation
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Cache the fresh HTML
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => {
-          // Offline fallback
-          return caches.match(request).then((cached) => {
-            return cached || caches.match(OFFLINE_URL);
-          });
-        })
+      fetch(request).then((r) => {
+        const c = r.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, c));
+        return r;
+      }).catch(() => caches.match(request).then((c) => c || caches.match(OFFLINE_URL)))
     );
     return;
   }
 
-  // Cache-first for static assets (JS, CSS, fonts, images, icons)
+  // Cache-first for static
   event.respondWith(cacheFirst(request));
 });
 
-// ——— Cache-first strategy ———
-// Try cache, fall back to network, cache the network response
-async function cacheFirst(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
-
+async function cacheFirst(req) {
+  const c = await caches.match(req);
+  if (c) return c;
   try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    // For non-navigation requests, just return a simple error
-    return new Response('Offline', { status: 503, statusText: 'Offline' });
-  }
+    const r = await fetch(req);
+    if (r.ok) { const cache = await caches.open(CACHE_NAME); cache.put(req, r.clone()); }
+    return r;
+  } catch { return new Response('Offline', { status: 503 }); }
 }
 
-// ——— Network-first strategy ———
-// Try network, fall back to cache
-async function networkFirst(request) {
-  try {
-    const response = await fetch(request);
-    return response;
-  } catch {
-    const cached = await caches.match(request);
-    return cached || new Response('Offline', { status: 503 });
-  }
+async function networkFirst(req) {
+  try { return await fetch(req); }
+  catch { return (await caches.match(req)) || new Response('Offline', { status: 503 }); }
 }
