@@ -130,8 +130,16 @@ function shuffleArr(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math
 
 const TL={bgGrad:"linear-gradient(155deg,#F6F9FC 0%,#F0F3F8 30%,#EAF0F6 55%,#E6F0F4 75%,#F2F6FA 100%)",cardFront:"linear-gradient(155deg,#FFF,#FBFDFF 40%,#F6F9FE 70%,#F4F8FC)",text:"#1E1A20",sub:"#58505E",muted:"#908898",faint:"#C8C0D0",hintBg:"rgba(160,112,192,.06)",hintBd:"rgba(160,112,192,.15)",hintTx:"#5E4878",trickBg:"rgba(88,176,112,.06)",trickBd:"rgba(88,176,112,.16)",trickTx:"#38784A",pillBg:"#FFF",pillBd:"rgba(0,0,0,.06)",btnBg:"#FFF",btnBd:"rgba(0,0,0,.08)",btnTx:"#78708A",dotBg:"rgba(0,0,0,.07)",divider:"rgba(0,0,0,.06)",cardShadow:"0 8px 32px rgba(30,20,40,.06),0 2px 8px rgba(0,0,0,.03)",accent:"#4A8EC2",pronBg:"rgba(74,142,194,.06)",pronBd:"rgba(74,142,194,.16)",speedBg:"rgba(74,142,194,.04)",speedBd:"rgba(74,142,194,.10)",speedActive:"rgba(74,142,194,.12)",inputBg:"#FFF",inputBd:"rgba(0,0,0,.10)",overlayBg:"rgba(244,248,252,.98)",tabBg:"#FFF",tabBd:"rgba(0,0,0,.06)",barFill:"#4A8EC2",exBg:"rgba(80,168,184,.05)",exBd:"rgba(80,168,184,.14)",exTx:"#28708A",catCardBg:"#FFF",catCardBd:"rgba(0,0,0,.05)",catCardShadow:"0 2px 12px rgba(0,0,0,.04)"};
 const TD={bgGrad:"linear-gradient(155deg,#10141A 0%,#121824 30%,#101418 55%,#121620 75%,#141820 100%)",cardFront:"linear-gradient(155deg,#182028,#161A24 40%,#141820)",text:"#EDE8F0",sub:"#8A8098",muted:"#585060",faint:"#383040",hintBg:"rgba(255,255,255,.04)",hintBd:"rgba(255,255,255,.08)",hintTx:"#8A8098",trickBg:"rgba(88,176,112,.08)",trickBd:"rgba(88,176,112,.14)",trickTx:"#78C098",pillBg:"rgba(255,255,255,.04)",pillBd:"rgba(255,255,255,.06)",btnBg:"rgba(255,255,255,.05)",btnBd:"rgba(255,255,255,.08)",btnTx:"#8A8098",dotBg:"rgba(255,255,255,.08)",divider:"rgba(255,255,255,.05)",cardShadow:"0 8px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.03)",accent:"#6AAED8",pronBg:"rgba(106,174,216,.10)",pronBd:"rgba(106,174,216,.20)",speedBg:"rgba(255,255,255,.03)",speedBd:"rgba(255,255,255,.06)",speedActive:"rgba(106,174,216,.14)",inputBg:"rgba(255,255,255,.06)",inputBd:"rgba(255,255,255,.10)",overlayBg:"rgba(16,20,26,.98)",tabBg:"#161A24",tabBd:"rgba(255,255,255,.06)",barFill:"#6AAED8",exBg:"rgba(80,168,184,.08)",exBd:"rgba(80,168,184,.12)",exTx:"#78C0D0",catCardBg:"rgba(255,255,255,.04)",catCardBd:"rgba(255,255,255,.06)",catCardShadow:"0 2px 12px rgba(0,0,0,.2)"};
-// ——— Audio: Google Translate TTS for consistent voice across all devices ———
-const SPEEDS=[{key:"normal",label:"Normal",rate:1,emoji:"🗣️"},{key:"slow",label:"Slow",rate:0.65,emoji:"🐢"}];
+// ——— Audio: Platform-aware speeds for Web Speech API ———
+const IS_MOBILE=/iPhone|iPad|iPod|Android/i.test(typeof navigator!=="undefined"?navigator.userAgent:"");
+const IS_IOS=/iPad|iPhone|iPod/.test(typeof navigator!=="undefined"?navigator.userAgent:"");
+const SPEEDS=IS_IOS
+  ?[{key:"normal",label:"Normal",rate:.55,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.28,emoji:"🐢"}]
+  :IS_MOBILE
+    ?[{key:"normal",label:"Normal",rate:.70,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.38,emoji:"🐢"}]
+    :[{key:"normal",label:"Normal",rate:.75,emoji:"🗣️"},{key:"slow",label:"Slow",rate:.50,emoji:"🐢"}];
+const NORMAL_RATE=SPEEDS[0].rate;
+const EX_RATE=IS_IOS?.50:IS_MOBILE?.65:.75;
 
 // ——— LANDING PAGE ———
 const PREVIEW_CARDS=[
@@ -252,57 +260,44 @@ function LandingPage({onStart,onLogin}){
   );
 }
 
-function useSpeech(){
-  const[s,ss]=useState(false);
-  const[a,sa]=useState(null);
-  const audioRef=useRef(null);
+function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);const[v,sv]=useState(null);const r=useRef(null);
+  useEffect(()=>{if(typeof window==="undefined"||!window.speechSynthesis)return;r.current=window.speechSynthesis;
+    const pickBest=(voices)=>{
+      const hi=voices.filter(x=>x.lang==="hi-IN"||x.lang.startsWith("hi"));
+      if(!hi.length)return null;
+      const google=hi.find(x=>x.name.includes("Google"));if(google)return google;
+      const cloud=hi.find(x=>!x.localService);if(cloud)return cloud;
+      const lekha=hi.find(x=>x.name.includes("Lekha"));if(lekha)return lekha;
+      return hi[0];
+    };
+    const loadVoices=()=>{const voices=r.current.getVoices();if(voices.length)sv(pickBest(voices));};
+    loadVoices();
+    r.current.addEventListener("voiceschanged",loadVoices);
+    if(IS_IOS){setTimeout(loadVoices,300);setTimeout(loadVoices,1000);}
+    return()=>r.current?.removeEventListener("voiceschanged",loadVoices);
+  },[]);
 
-  // Build Google Translate TTS URL for Hindi
-  const ttsUrl=(text)=>{
-    const encoded=encodeURIComponent(text.substring(0,200));
-    return`https://translate.google.com/translate_tts?ie=UTF-8&tl=hi&client=tw-ob&q=${encoded}`;
-  };
-
-  const speak=useCallback((text,rate=1,key="normal")=>{
-    // Stop any current playback
-    if(audioRef.current){audioRef.current.pause();audioRef.current=null;}
-
+  const speak=useCallback((text,rate=NORMAL_RATE,key="normal")=>{
+    if(!r.current)return;r.current.cancel();
     const cleaned=cleanForSpeech(text);
     const parts=cleaned.split(/\s*\/\s*/).filter(Boolean);
     ss(true);sa(key);
-
-    const playPart=(i)=>{
+    const speakPart=(i)=>{
       if(i>=parts.length){ss(false);sa(null);return;}
-      const audio=new Audio(ttsUrl(parts[i].trim()));
-      audioRef.current=audio;
-      audio.playbackRate=rate;  // slow = 0.65, normal = 1
-      audio.onended=()=>{
-        if(i<parts.length-1){setTimeout(()=>playPart(i+1),400);}
-        else{ss(false);sa(null);audioRef.current=null;}
-      };
-      audio.onerror=()=>{
-        console.warn("[Audio] Google TTS failed, trying fallback");
-        // Fallback to Web Speech API if Google TTS fails (e.g. offline)
-        if(window.speechSynthesis){
-          const u=new SpeechSynthesisUtterance(parts[i].trim());
-          u.lang="hi-IN";u.rate=rate===1?0.75:0.45;
-          u.onend=()=>{if(i<parts.length-1)setTimeout(()=>playPart(i+1),400);else{ss(false);sa(null);}};
-          u.onerror=()=>{ss(false);sa(null);};
-          window.speechSynthesis.speak(u);
-        }else{ss(false);sa(null);}
-      };
-      audio.play().catch(()=>{ss(false);sa(null);});
+      const u=new SpeechSynthesisUtterance(parts[i].trim());
+      u.lang="hi-IN";u.rate=rate;u.pitch=IS_IOS?1.08:1.04;u.volume=1;
+      if(v)u.voice=v;
+      // Chrome desktop: keep alive to prevent audio degradation on long text
+      const keepAlive=(!IS_MOBILE&&!IS_IOS)?setInterval(()=>{if(r.current&&r.current.speaking){r.current.pause();r.current.resume();}else clearInterval(keepAlive);},5000):null;
+      u.onend=()=>{if(keepAlive)clearInterval(keepAlive);if(i<parts.length-1)setTimeout(()=>speakPart(i+1),400);else{ss(false);sa(null);}};
+      u.onerror=()=>{if(keepAlive)clearInterval(keepAlive);ss(false);sa(null);};
+      r.current.speak(u);
     };
-    playPart(0);
-  },[]);
+    speakPart(0);
+  },[v]);
 
-  const stop=useCallback(()=>{
-    if(audioRef.current){audioRef.current.pause();audioRef.current=null;}
-    if(window.speechSynthesis)window.speechSynthesis.cancel();
-    ss(false);sa(null);
-  },[]);
-
-  return{speak,stop,speaking:s,activeSpeed:a,supported:true};
+  const stop=useCallback(()=>{if(r.current)r.current.cancel();ss(false);sa(null);},[]);
+  return{speak,stop,speaking:s,activeSpeed:a,supported:typeof window!=="undefined"&&!!window.speechSynthesis};
 }
 function useSwipe(onL,onR){const sx=useRef(0);const sy=useRef(0);return{onTouchStart:useCallback(e=>{sx.current=e.touches[0].clientX;sy.current=e.touches[0].clientY;},[]),onTouchEnd:useCallback(e=>{const dx=e.changedTouches[0].clientX-sx.current;const dy=e.changedTouches[0].clientY-sy.current;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){dx>0?onR():onL();}},[onL,onR])};}
 
@@ -464,7 +459,7 @@ export default function App(){
 
   const speakText=card?.speakAs||card?.back;
   const prevFlipped=useRef(false);
-  useEffect(()=>{if(flipped&&!prevFlipped.current){if(autoSpeak&&supported&&card)setTimeout(()=>speak(speakText,1,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,speakText]);
+  useEffect(()=>{if(flipped&&!prevFlipped.current){if(autoSpeak&&supported&&card)setTimeout(()=>speak(speakText,NORMAL_RATE,"normal"),400);}prevFlipped.current=flipped;},[flipped,card,autoSpeak,supported,speak,speakText]);
 
   const doFlip=useCallback(()=>{if(!anim){setFlipped(f=>!f);setShowHint(false);markActive();}},[anim,markActive]);
   const nav=useCallback(d=>{if(anim)return;setAnim(true);setFlipped(false);setShowHint(false);setShowLatin(false);setShowGender(false);setShowPlural(false);stop();markActive();setTimeout(()=>{setIdx(i=>{const n=i+d;return n<0?cards.length-1:n>=cards.length?0:n;});setAnim(false);},200);},[cards.length,anim,stop,markActive]);
@@ -493,7 +488,7 @@ export default function App(){
   const doShuffle=()=>{setShuffledCards(shuffleArr(baseCards));setShuffled(true);setIdx(0);setFlipped(false);};
   const dailyTarget=stats.dailyTarget||25;const targetPct=Math.min(Math.round((todayFlips/dailyTarget)*100),100);
   const cl=card?getLevel(cardLevels,card.id):{level:1};
-  const speakEx=e=>{e.stopPropagation();markActive();if(card?.example)speak(card.example.hi,1,"normal");};
+  const speakEx=e=>{e.stopPropagation();markActive();if(card?.example)speak(card.example.hi,EX_RATE,"normal");};
   const closeTutorial=()=>{setShowTutorial(false);if(user)saveData(user.uid,{showTutorial:false});};
   const inCardView=activeCategory!==null||practiceMode;
 
