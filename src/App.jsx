@@ -301,7 +301,17 @@ function useSpeech(){const[s,ss]=useState(false);const[a,sa]=useState(null);cons
 }
 function useSwipe(onL,onR){const sx=useRef(0);const sy=useRef(0);return{onTouchStart:useCallback(e=>{sx.current=e.touches[0].clientX;sy.current=e.touches[0].clientY;},[]),onTouchEnd:useCallback(e=>{const dx=e.changedTouches[0].clientX-sx.current;const dy=e.changedTouches[0].clientY-sy.current;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){dx>0?onR():onL();}},[onL,onR])};}
 
-async function saveData(uid,d){try{await setDoc(doc(db,"users",uid),{...d,updatedAt:new Date().toISOString()},{merge:true});}catch(e){console.error(e);}}
+async function saveData(uid,d){try{
+  // SAFETY: never overwrite a full cardLevels with empty {} — indicates race condition
+  if(d.cardLevels&&Object.keys(d.cardLevels).length===0){
+    const existing=await getDoc(doc(db,"users",uid));
+    if(existing.exists()&&existing.data().cardLevels&&Object.keys(existing.data().cardLevels).length>0){
+      console.warn("[SaveGuard] Refusing to overwrite non-empty cardLevels with empty object");
+      return;
+    }
+  }
+  await setDoc(doc(db,"users",uid),{...d,updatedAt:new Date().toISOString()},{merge:true});
+}catch(e){console.error(e);}}
 async function loadData(uid){try{const s=await getDoc(doc(db,"users",uid));if(s.exists())return s.data();}catch(e){console.error(e);}return null;}
 
 function PasswordInput({value,onChange,placeholder,onKeyDown,T}){const[v,setV]=useState(false);return(<div style={{position:"relative",width:"100%"}}><input type={v?"text":"password"} placeholder={placeholder} value={value} onChange={onChange} onKeyDown={onKeyDown} style={{width:"100%",padding:"14px 48px 14px 16px",borderRadius:14,border:`1.5px solid ${T.inputBd}`,background:T.inputBg,color:T.text,fontSize:16,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box"}}/><button type="button" onClick={()=>setV(x=>!x)} tabIndex={-1} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",padding:"6px",color:T.muted,fontSize:16}}>{v?"🙈":"👁️"}</button></div>);}
@@ -354,6 +364,8 @@ export default function App(){
   const lastActivity=useRef(Date.now());const sessionStart=useRef(Date.now());
   // Ref for tracking marked card to fix Due stuck bug
   const lastMarkedId=useRef(null);
+  // CRITICAL: prevents save-before-load race that wipes user data
+  const dataLoaded=useRef(false);
 
   // ——— PWA Install ———
   const pwa=usePWAInstall();
@@ -450,12 +462,42 @@ export default function App(){
   // Reset info toggles when card changes
   useEffect(()=>{setShowLatin(false);setShowGender(false);setShowPlural(false);setShowSchedule(false);},[idx]);
 
-  useEffect(()=>{const unsub=onAuthStateChanged(auth,async usr=>{setUser(usr);if(usr){const d=await loadData(usr.uid);if(d){setCardLevels(d.cardLevels||{});setUserName(d.name||"");setStats(d.stats||{totalMinutes:0,dailyLog:{},dailyTarget:25});setTodayFlips(d.stats?.dailyLog?.[today]||0);setLang(d.lang||"en");if(d.favorites)setFavorites(new Set(d.favorites));if(d.nailedCount)setNailedCount(d.nailedCount);if(d.showTutorial)setShowTutorial(true);}setShowNamaste(true);}setAuthLoading(false);});return()=>unsub();},[]);
+  useEffect(()=>{const unsub=onAuthStateChanged(auth,async usr=>{
+    dataLoaded.current=false; // reset on auth change
+    setUser(usr);
+    if(usr){
+      const d=await loadData(usr.uid);
+      if(d){
+        setCardLevels(d.cardLevels||{});
+        setUserName(d.name||"");
+        setStats(d.stats||{totalMinutes:0,dailyLog:{},dailyTarget:25});
+        setTodayFlips(d.stats?.dailyLog?.[today]||0);
+        setLang(d.lang||"en");
+        if(d.favorites)setFavorites(new Set(d.favorites));
+        if(d.nailedCount)setNailedCount(d.nailedCount);
+        if(d.showTutorial)setShowTutorial(true);
+      }
+      // CRITICAL: only enable saves AFTER load completed (prevents wiping data)
+      dataLoaded.current=true;
+      setShowNamaste(true);
+    }
+    setAuthLoading(false);
+  });return()=>unsub();},[]);
 
   useEffect(()=>{if(!user)return;const iv=setInterval(()=>{if(Date.now()-lastActivity.current<60000){const el=(Date.now()-sessionStart.current)/60000;if(el>0&&el<2)setStats(p=>({...p,totalMinutes:(p.totalMinutes||0)+el}));}sessionStart.current=Date.now();},30000);return()=>clearInterval(iv);},[user]);
 
   const saveTimeout=useRef(null);
-  useEffect(()=>{if(!user)return;if(saveTimeout.current)clearTimeout(saveTimeout.current);saveTimeout.current=setTimeout(async()=>{setSaving(true);await saveData(user.uid,{name:userName,cardLevels,stats,lang,favorites:[...favorites],nailedCount,showTutorial:false});setSaving(false);},1000);return()=>{if(saveTimeout.current)clearTimeout(saveTimeout.current);};},[cardLevels,user,userName,stats,lang,favorites,nailedCount]);
+  useEffect(()=>{
+    if(!user)return;
+    if(!dataLoaded.current)return; // REFUSE saves until load completes
+    if(saveTimeout.current)clearTimeout(saveTimeout.current);
+    saveTimeout.current=setTimeout(async()=>{
+      setSaving(true);
+      await saveData(user.uid,{name:userName,cardLevels,stats,lang,favorites:[...favorites],nailedCount,showTutorial:false});
+      setSaving(false);
+    },1000);
+    return()=>{if(saveTimeout.current)clearTimeout(saveTimeout.current);};
+  },[cardLevels,user,userName,stats,lang,favorites,nailedCount]);
 
   const speakText=card?.speakAs||card?.back;
   const prevFlipped=useRef(false);
@@ -798,4 +840,4 @@ export default function App(){
   );
 }
 
-function DeleteBtn({T,u}){const[cd,setCd]=useState(false);const[dp,setDp]=useState("");const[de,setDe]=useState("");const[dl,setDl]=useState(false);const hd=async()=>{if(!cd){setCd(true);return;}if(!dp){setDe(u.pw);return;}setDl(true);try{const c=EmailAuthProvider.credential(auth.currentUser.email,dp);await reauthenticateWithCredential(auth.currentUser,c);await deleteDoc(doc(db,"users",auth.currentUser.uid));await deleteUser(auth.currentUser);}catch(e){setDe("Wrong password.");setDl(false);}};return(<><div style={{fontSize:14,fontWeight:700,color:"#C03040",marginBottom:4}}>⚠️ {u.deleteAcc}</div><div style={{fontSize:11,color:T.muted,marginBottom:8}}>{u.deleteWarn}</div>{cd&&<><PasswordInput value={dp} onChange={e=>setDp(e.target.value)} placeholder={u.pw} T={T} onKeyDown={e=>e.key==="Enter"&&hd()}/>{de&&<div style={{marginTop:6,fontSize:11,color:"#C03040"}}>{de}</div>}</>}<button onClick={hd} disabled={dl} style={{width:"100%",padding:"10px",borderRadius:12,border:"none",background:cd?"#C03040":"transparent",color:cd?"#FFF":"#C03040",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:700,cursor:dl?"wait":"pointer",marginTop:8,opacity:dl?.6:1}}>{dl?"...":cd?u.confirm:u.deleteAcc}</button>{cd&&<button onClick={()=>{setCd(false);setDe("");setDp("");}} style={{width:"100%",padding:"6px",border:"none",background:"transparent",color:T.muted,fontSize:12,fontFamily:"inherit",cursor:"pointer",marginTop:4}}>{u.cancel}</button>}</>);}
+function DeleteBtn({T,u}){const[cd,setCd]=useState(false);const[dp,setDp]=useState("");const[dc,setDc]=useState("");const[de,setDe]=useState("");const[dl,setDl]=useState(false);const hd=async()=>{if(!cd){setCd(true);return;}if(dc!=="DELETE"){setDe('Type "DELETE" to confirm');return;}if(!dp){setDe(u.pw);return;}setDl(true);try{const c=EmailAuthProvider.credential(auth.currentUser.email,dp);await reauthenticateWithCredential(auth.currentUser,c);await deleteDoc(doc(db,"users",auth.currentUser.uid));await deleteUser(auth.currentUser);}catch(e){setDe("Wrong password.");setDl(false);}};return(<><div style={{fontSize:14,fontWeight:700,color:"#C03040",marginBottom:4}}>⚠️ {u.deleteAcc}</div><div style={{fontSize:11,color:T.muted,marginBottom:8}}>{u.deleteWarn}</div>{cd&&<><input type="text" value={dc} onChange={e=>setDc(e.target.value)} placeholder='Type "DELETE" to confirm' style={{width:"100%",padding:"10px 12px",borderRadius:12,border:`1.5px solid ${T.inputBd}`,background:T.inputBg,color:T.text,fontSize:14,fontFamily:"'Outfit',sans-serif",outline:"none",boxSizing:"border-box",marginBottom:8}}/><PasswordInput value={dp} onChange={e=>setDp(e.target.value)} placeholder={u.pw} T={T} onKeyDown={e=>e.key==="Enter"&&hd()}/>{de&&<div style={{marginTop:6,fontSize:11,color:"#C03040"}}>{de}</div>}</>}<button onClick={hd} disabled={dl} style={{width:"100%",padding:"10px",borderRadius:12,border:"none",background:cd?"#C03040":"transparent",color:cd?"#FFF":"#C03040",fontSize:13,fontFamily:"'Outfit',sans-serif",fontWeight:700,cursor:dl?"wait":"pointer",marginTop:8,opacity:dl?.6:1}}>{dl?"...":cd?u.confirm:u.deleteAcc}</button>{cd&&<button onClick={()=>{setCd(false);setDe("");setDp("");setDc("");}} style={{width:"100%",padding:"6px",border:"none",background:"transparent",color:T.muted,fontSize:12,fontFamily:"inherit",cursor:"pointer",marginTop:4}}>{u.cancel}</button>}</>);}
